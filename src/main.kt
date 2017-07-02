@@ -2,18 +2,11 @@ fun main(args: Array<String>) {
     println("Examples ....")
     println()
 
-    val list: ArrayList<String> = ArrayList()
-    list.add("one")
-    list.add("two")
-    list.add("three")
-    foreachList(list)
-
-    list.add("four")
-    list.add("five")
-    list.add("six")
-    streamForeachList(list)
-
-    translateNumbers(list)
+    val list1= listOf("one", "two", "three")
+    foreachList(list1)
+    val list2 =  list1 + listOf("four", "five", "six")
+    streamForeachList(list2)
+    translateNumbers(list2)
 }
 
 fun foreachList(vals: List<String>) {
