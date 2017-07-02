@@ -7,6 +7,8 @@ This code repo is in Kotlin just for simple.
 
 ### Foreach
 1 .Use JVM ```foreach``` to loop some outputs.
+
 2. Use JVM ```stream().foreach``` to loop some outputs, Java8 Only.
+
 3. Use a kind of map on ```stream``` to deal on data and output by ```foreach```.
 
