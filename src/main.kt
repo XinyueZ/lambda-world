@@ -6,12 +6,20 @@ fun main(args: Array<String>) {
     list.add("one")
     list.add("two")
     list.add("three")
-    foreachList(
-            list
-    )
+    foreachList(list)
+
+    list.add("four")
+    list.add("five")
+    list.add("six")
+    streamForeachList(list)
 }
 
 fun foreachList(vals: List<String>) {
     println("[foreach] on list")
     vals.forEach({ s -> println(s) })
+}
+
+fun streamForeachList(vals: List<String>) {
+    println("[stream.foreach] on list")
+    vals.stream().forEach({ s -> println(s) })
 }
