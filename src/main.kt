@@ -77,7 +77,7 @@ fun sumParallel(vals: List<String>) {
 }
 
 fun sumAdvanced(vals: List<String>) {
-    println("[stream.map.flatMapToInt.sum] on list")
+    println("[stream + stream] on list")
     vals.stream().flatMapToInt {
         Stream.of(when (it) {
             "one" -> Pair(1, 1)//index or position, value
