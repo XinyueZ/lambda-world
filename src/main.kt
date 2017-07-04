@@ -37,7 +37,10 @@ fun translateNumbers(vals: List<String>) {
 
 fun sum(vals: List<String>) {
     println("[stream.mapToInt.sum] on list")
-    val sum = vals.stream().mapToInt { value: String? ->
+    vals.stream().filter({
+        if (vals.indexOf(it) == vals.size - 1) print(it + " = ") else print(it + " + ")
+        true
+    }).mapToInt { value: String? ->
         when (value) {
             "one" -> 1
             "two" -> 2
@@ -47,6 +50,5 @@ fun sum(vals: List<String>) {
             "six" -> 6
             else -> -1
         }
-    }.sum()
-    println("summary=" + sum.toString())
+    }.sum().let { println(it.toString()) }
 }
