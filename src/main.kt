@@ -2,11 +2,12 @@ fun main(args: Array<String>) {
     println("Examples ....")
     println()
 
-    val list1= listOf("one", "two", "three")
+    val list1 = listOf("one", "two", "three")
     foreachList(list1)
-    val list2 =  list1 + listOf("four", "five", "six")
+    val list2 = list1 + listOf("four", "five", "six")
     streamForeachList(list2)
     translateNumbers(list2)
+    sum(list2)
 }
 
 fun foreachList(vals: List<String>) {
@@ -32,4 +33,20 @@ fun translateNumbers(vals: List<String>) {
             else -> -1
         }
     }.forEach { s -> println(s) }
+}
+
+fun sum(vals: List<String>) {
+    println("[stream.mapToInt.sum] on list")
+    val sum = vals.stream().mapToInt { value: String? ->
+        when (value) {
+            "one" -> 1
+            "two" -> 2
+            "three" -> 3
+            "four" -> 4
+            "five" -> 5
+            "six" -> 6
+            else -> -1
+        }
+    }.sum()
+    println("summary=" + sum.toString())
 }
