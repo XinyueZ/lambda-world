@@ -1,3 +1,5 @@
+import java.util.stream.IntStream
+
 fun main(args: Array<String>) {
     println("Examples ....")
     println()
@@ -73,25 +75,21 @@ fun sumParallel(vals: List<String>) {
     }.sum().let { println(it) }
 }
 
-//fun sumAdvanced(vals: List<String>) {
-//    println("[stream.mapToInt.toList] on list")
-//
-//    vals.stream().mapToInt { }
-//
-////     vals.stream().mapToInt { value: String? ->
-////        when (value) {
-////            "one" -> 1
-////            "two" -> 2
-////            "three" -> 3
-////            "four" -> 4
-////            "five" -> 5
-////            "six" -> 6
-////            else -> -1
-////        }
-////    }
-//
-////    nums.stream().filter({
-////        if (nums.indexOf(it) == nums.size - 1) print(it.toString() + " = ") else print(it.toString() + " + ")
-////        true
-////    }).mapToInt { it }.sum().let { println(it.toString()) }
-//}
+fun sumAdvanced(vals: List<String>) {
+    println("[stream.map.flatMapToInt.sum] on list")
+    vals.stream().map {
+        when (it) {
+            "one" -> Pair(1,1)//index, value
+            "two" -> Pair(2,2)
+            "three" -> Pair(3,3)
+            "four" -> Pair(4,4)
+            "five" -> Pair(5,5)
+            "six" -> Pair(6,7)
+            else -> null
+        }
+    }.filter{
+        if (it!!.first == vals.size ) print(it!!.first.toString() + " = ") else print(it!!.first.toString() + " + ")
+        true
+    }.flatMapToInt { IntStream.of(it!!.second) }.sum().let { println(it) }
+
+}
