@@ -7,7 +7,7 @@ This code repo is in Kotlin just for simple.
 
 ### Foreach
 
-1 .Use JVM ```foreach``` to loop some outputs.
+1. Use JVM ```foreach``` to loop some outputs.
 
 2. Use JVM ```stream().foreach``` to loop some outputs, Java8 Only.
 
@@ -16,4 +16,6 @@ This code repo is in Kotlin just for simple.
 4. Use ```sum``` to get summary of numbers.
 
 5. Use ```parallel``, the order won't be ensured.
+
+6. Use more than one streams to do task, i.e : ```map``` and ```flatMapToInt```  and make ```sum``` .
 
