@@ -8,6 +8,7 @@ fun main(args: Array<String>) {
     streamForeachList(list2)
     translateNumbers(list2)
     sum(list2)
+    sumParallel(list2)
 }
 
 fun foreachList(vals: List<String>) {
@@ -52,3 +53,42 @@ fun sum(vals: List<String>) {
         }
     }.sum().let { println(it.toString()) }
 }
+
+
+fun sumParallel(vals: List<String>) {
+    println("[stream.mapToInt.parallel.sum] on list")
+    vals.stream().parallel().filter({
+        if (vals.indexOf(it) == vals.size - 1) print(it + " = ") else print(it + " + ")
+        true
+    }).mapToInt { value: String? ->
+        when (value) {
+            "one" -> 1
+            "two" -> 2
+            "three" -> 3
+            "four" -> 4
+            "five" -> 5
+            "six" -> 6
+            else -> -1
+        }
+    }.sum().let { println(it.toString()) }
+}
+
+
+
+//fun sumAdvanced(vals: List<String>) {
+//    println("[stream.mapToInt.toList] on list")
+//    vals.stream().mapToInt { value: String? ->
+//        when (value) {
+//            "one" -> 1
+//            "two" -> 2
+//            "three" -> 3
+//            "four" -> 4
+//            "five" -> 5
+//            "six" -> 6
+//            else -> -1
+//        }
+//    }.toList().stream().filter({
+//        it
+//        true
+//    }).sum().let { println(it.toString()) }
+//}

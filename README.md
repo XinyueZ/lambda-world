@@ -15,3 +15,5 @@ This code repo is in Kotlin just for simple.
 
 4. Use ```sum``` to get summary of numbers.
 
+5. Use ```parallel``, the order won't be ensured.
+
