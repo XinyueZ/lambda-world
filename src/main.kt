@@ -1,3 +1,4 @@
+import java.util.stream.Collectors
 import java.util.stream.IntStream
 import java.util.stream.Stream
 
@@ -13,6 +14,7 @@ fun main(args: Array<String>) {
     sum(list2)
     sumParallel(list2)
     sumAdvanced(list2)
+    evenOdd(list2)
 }
 
 fun foreachList(vals: List<String>) {
@@ -93,4 +95,24 @@ fun sumAdvanced(vals: List<String>) {
         }.flatMapToInt { IntStream.of(it!!.second) }
     }.sum().let { println(it) }
 
+}
+
+fun evenOdd(vals: List<String>) {
+    println("[stream + collect + partitioningBy] on list")
+    val collect = vals.stream().collect(Collectors.partitioningBy({
+        val num = when (it) {
+            "one" -> 1
+            "two" -> 2
+            "three" -> 3
+            "four" -> 4
+            "five" -> 5
+            "six" -> 6
+            else -> -1
+        }
+        num.rem(2) == 0
+    }))
+    println("even:")
+    println(collect[true])
+    println("odd:")
+    println(collect[false])
 }
