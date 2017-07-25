@@ -20,3 +20,5 @@ This code repo is in Kotlin just for simple.
 6. Use more than one streams to do task, i.e : ```map``` and ```flatMapToInt```  and make ```sum``` .
 
 7. Use ```partitioningBy``` to generate partition collections from stream source.
+
+8. Use inline function which is a feature of Kotlin to simulate ```foreach```.

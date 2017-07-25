@@ -15,16 +15,27 @@ fun main(args: Array<String>) {
     sumParallel(list2)
     sumAdvanced(list2)
     evenOdd(list2)
+
+    simulateForeach(list2) {
+        println(it)
+    }
 }
 
 fun foreachList(vals: List<String>) {
     println("[foreach] on list")
-    vals.forEach({ println(it) })
+    vals.forEach{ println(it) }
 }
 
 fun streamForeachList(vals: List<String>) {
     println("[stream.foreach] on list")
-    vals.stream().forEach({ println(it) })
+    vals.stream().forEach{ println(it) }
+}
+
+fun simulateForeach(vals: List<String>, body: (String) -> Unit) {
+    println("Foreach simulated by inline fun")
+    for (s in vals) {
+        body(s)
+    }
 }
 
 fun translateNumbers(vals: List<String>) {
