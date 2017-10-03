@@ -1,9 +1,10 @@
+
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import java.util.stream.Stream
 
 fun main(args: Array<String>) {
-    println("Examples ....")
+    println("Examples foreach, list, array, collection ....")
     println()
 
     val list1 = listOf("one", "two", "three")
@@ -127,3 +128,4 @@ fun evenOdd(vals: List<String>) {
     println("odd:")
     println(collect[false])
 }
+
