@@ -1,8 +1,13 @@
 # World of lambda
-Here I added more and more usages about lambda.
-This is not a tutorial.
-This repo provides samples only.
-This code repo is in Kotlin just for simple.
+- Here I added more and more usages about lambda.
+
+- This is not a tutorial.
+
+- This repo provides samples only.
+
+- This code repo is in Kotlin just keep all simple and clean.
+
+- Knowledge ranges from collection i.e foreach, stream to some high like [coroutines](https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md) .
 
 
 ### Foreach
