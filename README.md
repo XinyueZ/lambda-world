@@ -22,3 +22,9 @@ This code repo is in Kotlin just for simple.
 7. Use ```partitioningBy``` to generate partition collections from stream source.
 
 8. Use inline function which is a feature of Kotlin to simulate ```foreach```.
+
+### Coroutines
+
+1. Basic usage, just call 2 functions that don't depend each other.
+
+2. Basic usage, just call 2 functions that depend each other.
