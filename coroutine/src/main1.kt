@@ -44,7 +44,7 @@ fun noDependency() {
     println("Call two functions which don't depend each other, pretend calling on the remote server, wait for some minutes less than $sumTime seconds........")
 
     runBlocking {
-        val time = measureTimeMillis {
+        measureTimeMillis {
             val num1 = async(CommonPool) { getNum1() }
             val num2 = async(CommonPool) { getNum2() }
             val result = async(CommonPool) {
@@ -52,8 +52,7 @@ fun noDependency() {
             }
             result.await()
             println("Finish computing")
-        }
-        println("Completed noDependency in $time ms")
+        }.apply { println("Completed noDependency in $this ms") }
     }
 }
 
@@ -61,15 +60,14 @@ fun dependency() {
     println("Call two functions which depend each other, need about $sumTime  seconds.......")
 
     runBlocking {
-        val time = measureTimeMillis {
+        measureTimeMillis {
             launch {
                 val num1 = getNum1()
                 val num2 = getNum2()
                 val addedResult = add(num1, num2)
                 println("The answer: $addedResult")
             }.apply { join() }
-        }
-        println("Completed dependency in $time ms")
+        }.apply { println("Completed dependency in $this ms") }
     }
 }
 
@@ -84,7 +82,7 @@ internal interface Service {
 fun networkCall() = runBlocking {
     println("Call some feeds normally, it needs some sec......")
 
-    val time = measureTimeMillis {
+    measureTimeMillis {
         launch {
             val service = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
                     .addConverterFactory(GsonConverterFactory.create())
@@ -105,14 +103,13 @@ fun networkCall() = runBlocking {
         // Better:
         // Or: join() to wait until the child routine completes.
 
-    }
-    println("Completed networkCall in $time ms")
+    }.apply { println("Completed networkCall in $this ms") }
 }
 
 fun networkCallAsync() = runBlocking {
     println("Call some feeds with async, it needs some sec......")
 
-    val time = measureTimeMillis {
+    measureTimeMillis {
         async(CommonPool) {
             val service = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
                     .addConverterFactory(GsonConverterFactory.create())
@@ -125,6 +122,5 @@ fun networkCallAsync() = runBlocking {
                 println("Something wrong at getting response")
             }
         }.apply { await() }
-    }
-    println("Completed networkCallAsync in $time ms")
+    }.apply { println("Completed networkCallAsync in $this ms") }
 }
