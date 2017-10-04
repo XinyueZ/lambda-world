@@ -23,7 +23,18 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     measureTimeMillis { doSomethingAsync(true).apply { join() } }.apply { println("Completed dependency in $this ms") }
     measureTimeMillis { networkCall().apply { join() } }.apply { println("Completed networkCall in $this ms") }
     measureTimeMillis { networkCallAsync().apply { join() } }.apply { println("Completed networkCallAsync in $this ms") }
-    measureTimeMillis { repeatFunction().apply { delay(5, TimeUnit.SECONDS) /*Without this the application goes end, because coroutine only suspend not blocking*/ } }.apply { println("Completed repeatFunction in $this ms") }
+    measureTimeMillis {
+        repeatFunction().apply {
+            delay(5, TimeUnit.SECONDS) // Without this the application goes end, because coroutine only suspend not blocking.
+            cancelAndJoin() // Must do here, otherwise the repeatFunctionAbort() does not work correctly.
+        }
+    }.apply { println("Completed repeatFunction in $this ms") }
+    measureTimeMillis {
+        repeatFunctionAbort().apply {
+            delay(3, TimeUnit.SECONDS)
+            cancelAndJoin() // Must do here, otherwise other functions which use repeat() can't generate correct sequence.
+        }
+    }.apply { println("Completed repeatFunctionAbort in $this ms") }
 }
 
 fun doSomethingAsync(depend: Boolean) = when (depend) {
@@ -89,9 +100,16 @@ fun networkCallAsync() = launch {
 }
 
 fun repeatFunction() = launch {
-    println("Try to play with kotlin builtIn repeat().")
+    println("Try to play with kotlin builtIn repeat()")
     repeat(1000) { index ->
-        println("do at $index").apply { delay(1, TimeUnit.SECONDS) }
+        println("do at $index").apply { delay(400, TimeUnit.MILLISECONDS) }
+    }
+}
+
+fun repeatFunctionAbort() = launch {
+    println("Try to play with kotlin builtIn repeat() but can be aborted")
+    repeat(1000) { index ->
+        println("do at $index").apply { delay(400, TimeUnit.MILLISECONDS) }
     }
 }
 
