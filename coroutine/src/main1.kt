@@ -23,6 +23,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     measureTimeMillis { doSomethingAsync(true).apply { join() } }.apply { println("Completed dependency in $this ms") }
     measureTimeMillis { networkCall().apply { join() } }.apply { println("Completed networkCall in $this ms") }
     measureTimeMillis { networkCallAsync().apply { join() } }.apply { println("Completed networkCallAsync in $this ms") }
+    measureTimeMillis { repeatFuntion().apply { delay(5, TimeUnit.SECONDS) /*Without this the application goes end, because coroutine only suspend not blocking*/ } }.apply { println("Completed repeatFuntion in $this ms") }
 }
 
 fun doSomethingAsync(depend: Boolean) = when (depend) {
@@ -85,6 +86,13 @@ fun networkCallAsync() = launch {
             println("Something wrong at getting response")
         }
     }.apply { await() }
+}
+
+fun repeatFuntion() = launch {
+    println("Try to play with kotlin builtIn repeat().")
+    repeat(1000) { index ->
+        println("do at $index").apply { delay(1, TimeUnit.SECONDS) }
+    }
 }
 
 private suspend fun getNum1() = 50.apply {
