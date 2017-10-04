@@ -15,6 +15,8 @@ val sumTime = Time1 + Time2
 fun add(x: Int, y: Int) = x + y
 
 fun main(args: Array<String>) = runBlocking<Unit> {
+    //join:  wait until launch child routine completes
+    //aWait: wait until async child routine completes
     measureTimeMillis { doSomethingAsync(false).apply { join() } }.apply { println("Completed noDependency in $this ms") }
     measureTimeMillis { doSomethingAsync(true).apply { join() } }.apply { println("Completed dependency in $this ms") }
     measureTimeMillis { networkCall().apply { join() } }.apply { println("Completed networkCall in $this ms") }
