@@ -124,10 +124,3 @@ fun networkCallAsync() = runBlocking {
     }
     println("Completed networkCallAsync in $time ms")
 }
-
-
-
-
-
-
-

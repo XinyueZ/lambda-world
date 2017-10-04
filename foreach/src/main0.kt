@@ -1,4 +1,3 @@
-
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import java.util.stream.Stream
@@ -24,12 +23,12 @@ fun main(args: Array<String>) {
 
 fun foreachList(vals: List<String>) {
     println("[foreach] on list")
-    vals.forEach{ println(it) }
+    vals.forEach { println(it) }
 }
 
 fun streamForeachList(vals: List<String>) {
     println("[stream.foreach] on list")
-    vals.stream().forEach{ println(it) }
+    vals.stream().forEach { println(it) }
 }
 
 fun simulateForeach(vals: List<String>, body: (String) -> Unit) {
@@ -128,4 +127,3 @@ fun evenOdd(vals: List<String>) {
     println("odd:")
     println(collect[false])
 }
-
