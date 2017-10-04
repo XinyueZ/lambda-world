@@ -30,18 +30,6 @@ fun doSomethingAsync(depend: Boolean) = when (depend) {
     true -> dependency()
 }
 
-suspend fun getNum1(): Int {
-    delay(Time1, TimeUnit.SECONDS)
-    println("$Time1 sec call")
-    return 50
-}
-
-suspend fun getNum2(): Int {
-    delay(Time2, TimeUnit.SECONDS)
-    println("$Time2 sec call")
-    return 50
-}
-
 fun noDependency() = launch {
     println("Call two functions which don't depend each other, pretend calling on the remote server, wait for some minutes less than $sumTime seconds........")
 
@@ -71,11 +59,7 @@ internal interface Service {
 fun networkCall() = launch {
     println("Call some feeds normally, it needs some sec......")
 
-    val service = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .build().create(Service::class.java)
-    val response = service.greeting().execute()
+    val response = getResponse()
     response.takeIf { it.isSuccessful }?.let {
         println("response networkCall: ${it.body()}")
     } ?: kotlin.run {
@@ -94,11 +78,7 @@ fun networkCallAsync() = launch {
     println("Call some feeds with async, it needs some sec......")
 
     async(CommonPool) {
-        val service = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build().create(Service::class.java)
-        val response = service.greeting().execute()
+        val response = getResponse()
         response.takeIf { it.isSuccessful }?.let {
             println("response networkCallAsync: ${it.body()}")
         } ?: kotlin.run {
@@ -106,3 +86,18 @@ fun networkCallAsync() = launch {
         }
     }.apply { await() }
 }
+
+private suspend fun getNum1() = 50.apply {
+    delay(Time1, TimeUnit.SECONDS)
+    println("$Time1 sec call")
+}
+
+private suspend fun getNum2() = 50.apply {
+    delay(Time2, TimeUnit.SECONDS)
+    println("$Time2 sec call")
+}
+
+private suspend fun getResponse() = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .build().create(Service::class.java).greeting().execute()
