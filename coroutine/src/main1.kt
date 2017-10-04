@@ -96,10 +96,10 @@ fun networkCall() = runBlocking {
             }
         }
 
-        // Delay for some minutes
-        // without this you'll see output later
-        // because JVM ends before response coming.
-//        delay(5, TimeUnit.SECONDS)
+        // Because JVM might end before response coming. We could miss the output.
+        // If there're other functions behind this function, we would see output.
+        // Otherwise you must delay for some minutes
+        // with delay(5, TimeUnit.SECONDS)
     }
     println("Completed networkCall in $time ms")
 }
