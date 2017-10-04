@@ -62,10 +62,12 @@ fun dependency() {
 
     runBlocking {
         val time = measureTimeMillis {
-            val num1 = getNum1()
-            val num2 = getNum2()
-            val addedResult = add(num1, num2)
-            println("The answer: $addedResult")
+            launch {
+                val num1 = getNum1()
+                val num2 = getNum2()
+                val addedResult = add(num1, num2)
+                println("The answer: $addedResult")
+            }.apply { join() }
         }
         println("Completed dependency in $time ms")
     }
@@ -94,12 +96,15 @@ fun networkCall() = runBlocking {
             } ?: kotlin.run {
                 println("Something wrong at getting response")
             }
-        }
+        }.apply { join() }
 
         // Because JVM might end before response coming. We could miss the output.
         // If there're other functions behind this function, we would see output.
-        // Otherwise you must delay for some minutes
-        // with delay(5, TimeUnit.SECONDS)
+        // Otherwise you can delay for some minutes
+        // with delay(5, TimeUnit.SECONDS).
+        // Better:
+        // Or: join() to wait until the child routine completes.
+
     }
     println("Completed networkCall in $time ms")
 }
@@ -108,7 +113,7 @@ fun networkCallAsync() = runBlocking {
     println("Call some feeds with async, it needs some sec......")
 
     val time = measureTimeMillis {
-        val call = async(CommonPool) {
+        async(CommonPool) {
             val service = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -119,8 +124,7 @@ fun networkCallAsync() = runBlocking {
             } ?: kotlin.run {
                 println("Something wrong at getting response")
             }
-        }
-        call.await()
+        }.apply { await() }
     }
     println("Completed networkCallAsync in $time ms")
 }
