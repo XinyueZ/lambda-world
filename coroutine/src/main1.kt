@@ -1,3 +1,5 @@
+@file:Suppress("EXPERIMENTAL_FEATURE_WARNING")
+
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.experimental.*
 import retrofit2.Call
