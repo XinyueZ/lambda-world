@@ -50,7 +50,7 @@ fun doSomethingAsync(depend: Boolean) = when (depend) {
     true -> dependency()
 }
 
-fun noDependency() = launch(CommonPool) {
+fun noDependency() = launch(newSingleThreadContext("noDependency thread")) {
     logln("Call two functions which don't depend each other, pretend calling on the remote server, wait for some minutes less than $sumTime seconds........")
 
     val num1 = asyncGetNum1()
@@ -59,7 +59,7 @@ fun noDependency() = launch(CommonPool) {
     logln("Finish computing")
 }
 
-fun dependency() = launch(CommonPool) {
+fun dependency() = launch(Unconfined) {
     logln("Call two functions which depend each other, need about $sumTime  seconds.......")
 
     val num1 = getNum1()
