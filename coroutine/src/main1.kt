@@ -28,6 +28,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
             println("main: I'm tired of waiting!")
             delay(1300) // Without this the application goes end, because coroutine only suspend not blocking.
             cancelAndJoin() // Must do here, otherwise output of this repeatFunction going on.
+            println("done, the repeat")
         }
     }.apply {
         println("Completed repeatFunction in $this ms")
@@ -103,16 +104,20 @@ fun networkCallAsync() = launch {
 }
 
 fun repeatFunction() = launch {
-    println("Try to play with kotlin builtIn repeat()")
-    val startTime = System.currentTimeMillis()
-    var nextPrintTime = startTime
-    var i = 0
-    while (isActive) { // computation loop, just wastes CPU
-        // print a message twice a second
-        if (System.currentTimeMillis() >= nextPrintTime) {
-            println("I'm sleeping ${i++} ...")
-            nextPrintTime += 500L
+    try {
+        println("Try to play with kotlin builtIn repeat()")
+        val startTime = System.currentTimeMillis()
+        var nextPrintTime = startTime
+        var i = 0
+        while (isActive) { // computation loop, just wastes CPU
+            // print a message twice a second
+            if (System.currentTimeMillis() >= nextPrintTime) {
+                println("I'm sleeping ${i++} ...")
+                nextPrintTime += 500L
+            }
         }
+    } finally {
+        println("finally in repeat")
     }
 }
 
