@@ -25,16 +25,19 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     measureTimeMillis { networkCallAsync().apply { join() } }.apply { println("Completed networkCallAsync in $this ms") }
     measureTimeMillis {
         repeatFunction().apply {
-            delay(5, TimeUnit.SECONDS) // Without this the application goes end, because coroutine only suspend not blocking.
-            cancelAndJoin() // Must do here, otherwise the repeatFunctionAbort() does not work correctly.
+            println("main: I'm tired of waiting!")
+            delay(1300) // Without this the application goes end, because coroutine only suspend not blocking.
+            cancelAndJoin() // Must do here, otherwise output of this repeatFunction going on.
         }
-    }.apply { println("Completed repeatFunction in $this ms") }
-    measureTimeMillis {
-        repeatFunctionAbort().apply {
-            delay(3, TimeUnit.SECONDS)
-            cancelAndJoin() // Must do here, otherwise other functions which use repeat() can't generate correct sequence.
-        }
-    }.apply { println("Completed repeatFunctionAbort in $this ms") }
+    }.apply {
+        println("Completed repeatFunction in $this ms")
+    }
+
+    launch {
+        println()
+        println("Last wait for all jobs if possible")
+        delay(20, TimeUnit.SECONDS)
+    }.apply { join() }
 }
 
 fun doSomethingAsync(depend: Boolean) = when (depend) {
@@ -101,15 +104,15 @@ fun networkCallAsync() = launch {
 
 fun repeatFunction() = launch {
     println("Try to play with kotlin builtIn repeat()")
-    repeat(1000) { index ->
-        println("do at $index").apply { delay(400, TimeUnit.MILLISECONDS) }
-    }
-}
-
-fun repeatFunctionAbort() = launch {
-    println("Try to play with kotlin builtIn repeat() but can be aborted")
-    repeat(1000) { index ->
-        println("do at $index").apply { delay(400, TimeUnit.MILLISECONDS) }
+    val startTime = System.currentTimeMillis()
+    var nextPrintTime = startTime
+    var i = 0
+    while (isActive) { // computation loop, just wastes CPU
+        // print a message twice a second
+        if (System.currentTimeMillis() >= nextPrintTime) {
+            println("I'm sleeping ${i++} ...")
+            nextPrintTime += 500L
+        }
     }
 }
 
