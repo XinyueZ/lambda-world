@@ -33,7 +33,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     }.apply {
         println("Completed repeatFunction in $this ms")
     }
-    measureTimeMillis { repeatUnderTimer() }
+    measureTimeMillis { repeatUnderTimer() } // Not do join() so that output shows behind next codes.
 
     launch {
         println()
