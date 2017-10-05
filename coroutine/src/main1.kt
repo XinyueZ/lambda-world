@@ -50,8 +50,8 @@ fun doSomethingAsync(depend: Boolean) = when (depend) {
 fun noDependency() = launch {
     println("Call two functions which don't depend each other, pretend calling on the remote server, wait for some minutes less than $sumTime seconds........")
 
-    val num1 = async(CommonPool) { getNum1() }
-    val num2 = async(CommonPool) { getNum2() }
+    val num1 = asyncGetNum1()
+    val num2 = asyncGetNum2()
     println("The answer: ${add(num1.await(), num2.await())}")
     println("Finish computing")
 }
@@ -141,14 +141,28 @@ fun repeatUnderTimer() = launch {
     }
 }
 
-private suspend fun getNum1() = 50.apply {
-    delay(Time1, TimeUnit.SECONDS)
+private fun getNum1() = 50.apply {
+    TimeUnit.SECONDS.sleep(Time1)
     println("$Time1 sec call")
 }
 
-private suspend fun getNum2() = 50.apply {
-    delay(Time2, TimeUnit.SECONDS)
+private fun getNum2() = 50.apply {
+    TimeUnit.SECONDS.sleep(Time2)
     println("$Time2 sec call")
+}
+
+private fun asyncGetNum1() = async(CommonPool) {
+    50.apply {
+        delay(Time1, TimeUnit.SECONDS)
+        println("$Time1 sec call")
+    }
+}
+
+private fun asyncGetNum2() = async(CommonPool) {
+    50.apply {
+        delay(Time2, TimeUnit.SECONDS)
+        println("$Time2 sec call")
+    }
 }
 
 private suspend fun getResponse() = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
