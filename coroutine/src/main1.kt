@@ -36,8 +36,8 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
     launch {
         println()
-        println("Last wait for all jobs if possible")
-        delay(20, TimeUnit.SECONDS)
+        println("Last 30 sec wait for all jobs if possible")
+        delay(30, TimeUnit.SECONDS)
     }.apply { join() }
 }
 
