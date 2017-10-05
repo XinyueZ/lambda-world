@@ -33,7 +33,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     }.apply {
         println("Completed repeatFunction in $this ms")
     }
-    measureTimeMillis { repeatUnderTimer().apply { join() } }
+    measureTimeMillis { repeatUnderTimer() }
 
     launch {
         println()
@@ -123,7 +123,9 @@ fun repeatFunction() = launch {
 }
 
 fun repeatUnderTimer() = launch {
-    withTimeout(10, TimeUnit.SECONDS) {
+    withTimeoutOrNull(10, TimeUnit.SECONDS) {
+        println("Doing under 10 sec control...")
+
         repeat(Int.MAX_VALUE) {
             print("[$it]:")
 
@@ -133,6 +135,9 @@ fun repeatUnderTimer() = launch {
             delay(1, TimeUnit.SECONDS)
             println()
         }
+    }.takeIf { it == null }.apply {
+        println()
+        println("10 sec job done!")
     }
 }
 
