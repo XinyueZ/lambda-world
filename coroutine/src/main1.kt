@@ -40,7 +40,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
         logln("Completed repeatFunction in $this ms")
     }
     measureTimeMillis { repeatUnderTimer() } // Not do join() so that output shows behind next codes.
-    measureTimeMillis { combineContext().apply { join() } }.apply { logln("Completed combineContext in $this ms") }
+    measureTimeMillis { combineContext().apply { join()/*no need if coroutineContext inside was removed, all children has own context*/ } }.apply { logln("Completed combineContext in $this ms") }
     measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
 
     launch {
@@ -157,11 +157,11 @@ fun combineContext() = launch(newSingleThreadContext("parent")) {
     logln("Evaluation the combination of contexts")
     logln("echo parent")
     launch(
-            newSingleThreadContext("child 1") + coroutineContext
+            newSingleThreadContext("child 1") + coroutineContext // As child of parent.
     ) {
         logln("echo child 1")
         launch(
-                newSingleThreadContext("child 2") + coroutineContext
+                newSingleThreadContext("child 2") + coroutineContext// As child of parent.
         ) {
             logln("echo child 2")
             launch(
@@ -183,7 +183,8 @@ class Ball(
 fun ping_pong() = launch {
     withTimeout(10, TimeUnit.SECONDS) {
         val chan = Channel<Ball>()
-        launch { // The first player, must get first hit, syntax: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#channels-are-fair
+        launch {
+            // The first player, must get first hit, syntax: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#channels-are-fair
             chan.consumeEach {
                 println()
                 logln("Player1: $it")
@@ -193,7 +194,8 @@ fun ping_pong() = launch {
                 delay(1, TimeUnit.SECONDS)
             }
         }
-        launch { // The second player.
+        launch {
+            // The second player.
             chan.consumeEach {
                 println()
                 logln("Player2: $it")
