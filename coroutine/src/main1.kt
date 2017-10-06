@@ -2,6 +2,8 @@
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.consumeEach
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -38,13 +40,16 @@ fun main(args: Array<String>) = runBlocking<Unit> {
         logln("Completed repeatFunction in $this ms")
     }
     measureTimeMillis { repeatUnderTimer() } // Not do join() so that output shows behind next codes.
-    measureTimeMillis {combineContext().apply { join() }}.apply { logln("Completed combineContext in $this ms")  }
+    measureTimeMillis { combineContext().apply { join() } }.apply { logln("Completed combineContext in $this ms") }
+    measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
 
     launch {
         println()
-        logln("Last 30 sec wait for all jobs if possible")
-        delay(30, TimeUnit.SECONDS)
+        logln("Last 40 sec wait for all jobs if possible")
+        delay(40, TimeUnit.SECONDS)
     }.apply { join() }
+
+    coroutineContext.cancelChildren() // If possible
 }
 
 fun doSomethingAsync(depend: Boolean) = when (depend) {
@@ -165,6 +170,40 @@ fun combineContext() = launch(newSingleThreadContext("parent")) {
                 logln("echo child 3")
             }
         }
+    }
+}
+
+class Ball(
+        var who: String = "",
+        var hit: Int = 0
+) {
+    override fun toString() = "Get from $who, hit = $hit"
+}
+
+fun ping_pong() = launch {
+    withTimeout(10, TimeUnit.SECONDS) {
+        val chan = Channel<Ball>()
+        launch { // The first player, must get first hit, syntax: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#channels-are-fair
+            chan.consumeEach {
+                println()
+                logln("Player1: $it")
+                it.who = "player1"
+                it.hit++
+                chan.send(it)
+                delay(1, TimeUnit.SECONDS)
+            }
+        }
+        launch { // The second player.
+            chan.consumeEach {
+                println()
+                logln("Player2: $it")
+                it.who = "player2"
+                it.hit++
+                chan.send(it)
+                delay(1, TimeUnit.SECONDS)
+            }
+        }
+        chan.send(Ball("Starter")) // Start game
     }
 }
 

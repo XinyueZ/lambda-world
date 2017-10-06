@@ -41,3 +41,5 @@
 5. Cancel on job.
 
 6. Join on job.
+
+7. Ping-Pong to demo channel-fair.
