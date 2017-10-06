@@ -20,6 +20,7 @@ val sumTime = Time1 + Time2
 fun add(x: Int, y: Int) = x + y
 
 fun main(args: Array<String>) = runBlocking<Unit> {
+    println("Main job is ${coroutineContext[Job]}")
     //join:  wait until launch child routine completes
     //aWait: wait until async child routine completes
     measureTimeMillis { doSomethingAsync(false).apply { join() } }.apply { logln("Completed noDependency in $this ms") }
@@ -37,6 +38,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
         logln("Completed repeatFunction in $this ms")
     }
     measureTimeMillis { repeatUnderTimer() } // Not do join() so that output shows behind next codes.
+    measureTimeMillis {combineContext().apply { join() }}.apply { logln("Completed combineContext in $this ms")  }
 
     launch {
         println()
@@ -129,7 +131,7 @@ fun repeatFunction() = launch(CommonPool) {
 
 fun repeatUnderTimer() = launch(CommonPool) {
     withTimeoutOrNull(10, TimeUnit.SECONDS) {
-        logln("Doing under 10 sec control...")
+        logln("Doing under 10 sec control, this job doesn't have join() later and will show behind ending message.")
 
         repeat(Int.MAX_VALUE) {
             print("[$it]:")
@@ -143,6 +145,26 @@ fun repeatUnderTimer() = launch(CommonPool) {
     }.takeIf { it == null }.apply {
         println()
         logln("10 sec job done!")
+    }
+}
+
+fun combineContext() = launch(newSingleThreadContext("parent")) {
+    logln("Evaluation the combination of contexts")
+    logln("echo parent")
+    launch(
+            newSingleThreadContext("child 1") + coroutineContext
+    ) {
+        logln("echo child 1")
+        launch(
+                newSingleThreadContext("child 2") + coroutineContext
+        ) {
+            logln("echo child 2")
+            launch(
+                    newSingleThreadContext("child 3")
+            ) {
+                logln("echo child 3")
+            }
+        }
     }
 }
 
