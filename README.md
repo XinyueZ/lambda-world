@@ -33,3 +33,11 @@
 1. Basic usage, just call 2 functions that don't depend each other.
 
 2. Basic usage, just call 2 functions that depend each other.
+
+3. Basic usage of builder like *launch* *async* .
+
+4. Combination of different context.
+
+5. Cancel on job.
+
+6. Join on job.
