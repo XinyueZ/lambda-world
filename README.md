@@ -43,3 +43,5 @@
 6. Join on job.
 
 7. Ping-Pong to demo channel-fair.
+
+8. Error(Exception)-handling.

@@ -25,6 +25,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     println("Main job is ${coroutineContext[Job]}")
     //join:  wait until launch child routine completes
     //aWait: wait until async child routine completes
+    measureTimeMillis { handleError().apply { join() } }.apply { logln("Completed handleError in $this ms") }
     measureTimeMillis { doSomethingAsync(false).apply { join() } }.apply { logln("Completed noDependency in $this ms") }
     measureTimeMillis { doSomethingAsync(true).apply { join() } }.apply { logln("Completed dependency in $this ms") }
     measureTimeMillis { networkCall().apply { join() } }.apply { logln("Completed networkCall in $this ms") }
@@ -207,6 +208,13 @@ fun ping_pong() = launch {
         }
         chan.send(Ball("Starter")) // Start game
     }
+}
+
+fun handleError() = launch(CoroutineExceptionHandler({ _, e ->
+    logln("Error-handling:  ${e.message}")
+})) {
+    logln("Create on error...")
+    throw RuntimeException("Bammm, some thing wrong")
 }
 
 private fun getNum1() = 50.apply {
