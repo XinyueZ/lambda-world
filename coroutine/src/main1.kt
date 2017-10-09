@@ -3,6 +3,7 @@
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import kotlinx.coroutines.experimental.channels.consumeEach
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -26,6 +27,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     //join:  wait until launch child routine completes
     //aWait: wait until async child routine completes
     measureTimeMillis { handleError().apply { join() } }.apply { logln("Completed handleError in $this ms") }
+    measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { doSomethingAsync(false).apply { join() } }.apply { logln("Completed noDependency in $this ms") }
     measureTimeMillis { doSomethingAsync(true).apply { join() } }.apply { logln("Completed dependency in $this ms") }
     measureTimeMillis { networkCall().apply { join() } }.apply { logln("Completed networkCall in $this ms") }
@@ -215,6 +217,36 @@ fun handleError() = launch(CoroutineExceptionHandler({ _, e ->
 })) {
     logln("Create on error...")
     throw RuntimeException("Bammm, some thing wrong")
+}
+
+suspend fun handleError2() = launch() {
+    logln("Demo for channel and error-handling on channel")
+    Channel<String>().apply {
+        launch(coroutineContext + CoroutineExceptionHandler({ _, e ->
+            logln("Error-handling:  ${e.message}")
+        })) {
+            (consumeHandleError2(this@apply))
+        }
+        val msgs = arrayOf("...msg1...", "...msg2...", "...msg3...", "...msg4...")
+        msgs.forEach {
+            send(it)
+            delay(1, TimeUnit.SECONDS)
+        }
+        close(SomeException())
+    }
+}
+
+class SomeException : Throwable("oha error happen")
+
+suspend fun consumeHandleError2(rec: ReceiveChannel<String>) {
+    while (true) {
+        rec.receiveOrNull()?.let {
+            logln(it)
+        } ?: kotlin.run {
+            logln("exit consumeHandleError2")
+            return
+        }
+    }
 }
 
 private fun getNum1() = 50.apply {
