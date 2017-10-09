@@ -27,7 +27,6 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     //join:  wait until launch child routine completes
     //aWait: wait until async child routine completes
     measureTimeMillis { handleError().apply { join() } }.apply { logln("Completed handleError in $this ms") }
-    measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { doSomethingAsync(false).apply { join() } }.apply { logln("Completed noDependency in $this ms") }
     measureTimeMillis { doSomethingAsync(true).apply { join() } }.apply { logln("Completed dependency in $this ms") }
     measureTimeMillis { networkCall().apply { join() } }.apply { logln("Completed networkCall in $this ms") }
@@ -44,6 +43,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     }
     measureTimeMillis { repeatUnderTimer() } // Not do join() so that output shows behind next codes.
     measureTimeMillis { combineContext().apply { join()/*no need if coroutineContext inside was removed, all children has own context*/ } }.apply { logln("Completed combineContext in $this ms") }
+    measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
 
     launch {
