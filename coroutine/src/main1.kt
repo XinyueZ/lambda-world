@@ -41,18 +41,20 @@ fun main(args: Array<String>) = runBlocking<Unit> {
     }.apply {
         logln("Completed repeatFunction in $this ms")
     }
-    measureTimeMillis { repeatUnderTimer() } // Not do join() so that output shows behind next codes.
-    measureTimeMillis { combineContext().apply { join()/*no need if coroutineContext inside was removed, all children has own context*/ } }.apply { logln("Completed combineContext in $this ms") }
+    measureTimeMillis { repeatUnderTimer().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply { logln("Completed repeatUnderTimer in $this ms") }
+    measureTimeMillis { combineContext().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply { logln("Completed combineContext in $this ms") }
     measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
 
     launch {
         println()
-        logln("Last 40 sec wait for all jobs if possible")
-        delay(40, TimeUnit.SECONDS)
+        logln("Last 30 sec wait for all jobs if possible, don't close this app, wait.....")
+        delay(30, TimeUnit.SECONDS)
     }.apply { join() }
 
     coroutineContext.cancelChildren() // If possible
+    println()
+    logln("Program ending.")
 }
 
 fun doSomethingAsync(depend: Boolean) = when (depend) {
@@ -138,17 +140,18 @@ fun repeatFunction() = launch(CommonPool) {
 }
 
 fun repeatUnderTimer() = launch(CommonPool) {
+    logln("Doing under 10 sec control, this job doesn't have join() later and will show behind ending message.")
     withTimeoutOrNull(10, TimeUnit.SECONDS) {
-        logln("Doing under 10 sec control, this job doesn't have join() later and will show behind ending message.")
+        launch(coroutineContext) {
+            repeat(Int.MAX_VALUE) {
+                print("[$it]:")
 
-        repeat(Int.MAX_VALUE) {
-            print("[$it]:")
+                for (i in 0..10)
+                    print(" $i ")
 
-            for (i in 0..10)
-                print(" $i ")
-
-            delay(1, TimeUnit.SECONDS)
-            println()
+                delay(1, TimeUnit.SECONDS)
+                println()
+            }
         }
     }.takeIf { it == null }.apply {
         println()
@@ -156,24 +159,29 @@ fun repeatUnderTimer() = launch(CommonPool) {
     }
 }
 
-fun combineContext() = launch(newSingleThreadContext("parent")) {
+fun combineContext() = launch(newSingleThreadContext("worker-parent")) {
     logln("Evaluation the combination of contexts")
     logln("echo parent")
+    val job = Job() //Only for fun, it can abort all launches and make child not child of parent.
     launch(
-            newSingleThreadContext("child 1") + coroutineContext // As child of parent.
+            newSingleThreadContext("worker-child 0") + coroutineContext //+ job JOB can make launch no more child of parent
     ) {
-        logln("echo child 1")
+        delay(3, TimeUnit.SECONDS)
         launch(
-                newSingleThreadContext("child 2") + coroutineContext// As child of parent.
+                newSingleThreadContext("worker-child 1") + coroutineContext //+ job
         ) {
-            logln("echo child 2")
+            delay(3, TimeUnit.SECONDS)
             launch(
-                    newSingleThreadContext("child 3")
+                    newSingleThreadContext("worker-child 2")  + coroutineContext //+ job
             ) {
+                delay(3, TimeUnit.SECONDS)
                 logln("echo child 3")
             }
+            logln("echo child 2")
         }
+        logln("echo child 1")
     }
+    //job.cancel() // If wanna see echo of children...., comment this line.
 }
 
 class Ball(
@@ -183,10 +191,13 @@ class Ball(
     override fun toString() = "Get from $who, hit = $hit"
 }
 
-fun ping_pong() = launch {
-    withTimeout(10, TimeUnit.SECONDS) {
-        val chan = Channel<Ball>()
-        launch {
+fun ping_pong() = launch(newSingleThreadContext("Ping Pong stage")) {
+    logln("---------------------------------------------------------------------------")
+    logln("Play and Ping Pong")
+    logln("---------------------------------------------------------------------------")
+    val chan = Channel<Ball>()
+    val res = withTimeoutOrNull(10, TimeUnit.SECONDS) {
+        launch(coroutineContext) {
             // The first player, must get first hit, syntax: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#channels-are-fair
             chan.consumeEach {
                 println()
@@ -197,7 +208,7 @@ fun ping_pong() = launch {
                 delay(1, TimeUnit.SECONDS)
             }
         }
-        launch {
+        launch(coroutineContext) {
             // The second player.
             chan.consumeEach {
                 println()
@@ -209,6 +220,11 @@ fun ping_pong() = launch {
             }
         }
         chan.send(Ball("Starter")) // Start game
+    }
+    if (res == null) {
+        println()
+        logln("---------------------------------------------------------------------------")
+        chan.close()
     }
 }
 
@@ -241,8 +257,10 @@ class SomeException : Throwable("oha error happen")
 suspend fun consumeHandleError2(rec: ReceiveChannel<String>) {
     while (true) {
         rec.receiveOrNull()?.let {
-            logln(it)
+            println()
+            logln("$it")
         } ?: kotlin.run {
+            println()
             logln("exit consumeHandleError2")
             return
         }
