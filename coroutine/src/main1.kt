@@ -164,15 +164,15 @@ fun combineContext() = launch(newSingleThreadContext("worker-parent")) {
     logln("echo parent")
     val job = Job() //Only for fun, it can abort all launches and make child not child of parent.
     launch(
-            newSingleThreadContext("worker-child 0") + coroutineContext //+ job JOB can make launch no more child of parent
+            newSingleThreadContext("worker-child 0") + coroutineContext + job //JOB can make launch no more child of parent
     ) {
         delay(3, TimeUnit.SECONDS)
         launch(
-                newSingleThreadContext("worker-child 1") + coroutineContext //+ job
+                newSingleThreadContext("worker-child 1") + coroutineContext + job
         ) {
             delay(3, TimeUnit.SECONDS)
             launch(
-                    newSingleThreadContext("worker-child 2")  + coroutineContext //+ job
+                    newSingleThreadContext("worker-child 2") + coroutineContext + job
             ) {
                 delay(3, TimeUnit.SECONDS)
                 logln("echo child 3")
@@ -182,6 +182,7 @@ fun combineContext() = launch(newSingleThreadContext("worker-parent")) {
         logln("echo child 1")
     }
     //job.cancel() // If wanna see echo of children...., comment this line.
+    //coroutineContext.cancel() // If wanna see echo of children...., comment this line.
 }
 
 class Ball(
@@ -200,7 +201,6 @@ fun ping_pong() = launch(newSingleThreadContext("Ping Pong stage")) {
         launch(coroutineContext) {
             // The first player, must get first hit, syntax: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#channels-are-fair
             chan.consumeEach {
-                println()
                 logln("Player1: $it")
                 it.who = "player1"
                 it.hit++
@@ -211,7 +211,6 @@ fun ping_pong() = launch(newSingleThreadContext("Ping Pong stage")) {
         launch(coroutineContext) {
             // The second player.
             chan.consumeEach {
-                println()
                 logln("Player2: $it")
                 it.who = "player2"
                 it.hit++
@@ -257,10 +256,8 @@ class SomeException : Throwable("oha error happen")
 suspend fun consumeHandleError2(rec: ReceiveChannel<String>) {
     while (true) {
         rec.receiveOrNull()?.let {
-            println()
             logln("$it")
         } ?: kotlin.run {
-            println()
             logln("exit consumeHandleError2")
             return
         }
