@@ -22,7 +22,7 @@ val sumTime = Time1 + Time2
 
 fun add(x: Int, y: Int) = x + y
 
-fun main(args: Array<String>) = runBlocking<Unit> {
+fun main(args: Array<String>) = runBlocking {
     println("Main job is ${coroutineContext[Job]}")
     //join:  wait until launch child routine completes
     //aWait: wait until async child routine completes
