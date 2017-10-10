@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import kotlinx.coroutines.experimental.channels.consumeEach
+import kotlinx.coroutines.experimental.channels.produce
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -45,6 +46,7 @@ fun main(args: Array<String>) = runBlocking {
     measureTimeMillis { combineContext().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply { logln("Completed combineContext in $this ms") }
     measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
+    measureTimeMillis { showInt().apply { join() } }.apply { logln("Completed showInt in $this ms") }
 
     launch {
         println()
@@ -164,15 +166,15 @@ fun combineContext() = launch(newSingleThreadContext("worker-parent")) {
     logln("echo parent")
     val job = Job() //Only for fun, it can abort all launches and make child not child of parent.
     launch(
-            newSingleThreadContext("worker-child 0") + coroutineContext + job //JOB can make launch no more child of parent
+            newSingleThreadContext("worker-child 0") + coroutineContext  //+ job //JOB can make launch no more child of parent
     ) {
         delay(3, TimeUnit.SECONDS)
         launch(
-                newSingleThreadContext("worker-child 1") + coroutineContext + job
+                newSingleThreadContext("worker-child 1") + coroutineContext //+ job
         ) {
             delay(3, TimeUnit.SECONDS)
             launch(
-                    newSingleThreadContext("worker-child 2") + coroutineContext + job
+                    newSingleThreadContext("worker-child 2") + coroutineContext //+ job
             ) {
                 delay(3, TimeUnit.SECONDS)
                 logln("echo child 3")
@@ -261,6 +263,29 @@ suspend fun consumeHandleError2(rec: ReceiveChannel<String>) {
             logln("exit consumeHandleError2")
             return
         }
+    }
+}
+
+fun showInt() = launch {
+    logln("Demo for produce")
+    val res = withTimeoutOrNull(10, TimeUnit.SECONDS) {
+        val pd = produceInt()
+        launch(coroutineContext) {
+            pd.consumeEach {
+                logln("Got: $it")
+            }
+        }
+    }
+    if (res == null) {
+        coroutineContext.cancel()
+        logln("End produce")
+    }
+}
+
+suspend fun produceInt() = produce {
+    while (true) {
+        send(System.currentTimeMillis().toString())
+        delay(200, TimeUnit.MILLISECONDS)
     }
 }
 
