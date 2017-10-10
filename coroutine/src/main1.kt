@@ -258,7 +258,7 @@ class SomeException : Throwable("oha error happen")
 suspend fun consumeHandleError2(rec: ReceiveChannel<String>) {
     while (true) {
         rec.receiveOrNull()?.let {
-            logln("$it")
+            logln(it)
         } ?: kotlin.run {
             logln("exit consumeHandleError2")
             return
@@ -283,9 +283,10 @@ fun showInt() = launch {
 }
 
 suspend fun produceInt() = produce {
+    var i = 0
     while (true) {
-        send(System.currentTimeMillis().toString())
-        delay(200, TimeUnit.MILLISECONDS)
+        send((++i).toString())
+        delay(1000, TimeUnit.MILLISECONDS)
     }
 }
 
