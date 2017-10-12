@@ -2,16 +2,14 @@
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
-import kotlinx.coroutines.experimental.channels.consumeEach
-import kotlinx.coroutines.experimental.channels.produce
+import kotlinx.coroutines.experimental.channels.*
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.system.measureTimeMillis
 
 fun log(msg: String) = print("[${Thread.currentThread().name}: ] $msg")
@@ -47,6 +45,7 @@ fun main(args: Array<String>) = runBlocking {
     measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
     measureTimeMillis { showInt().apply { join() } }.apply { logln("Completed showInt in $this ms") }
+    measureTimeMillis { sendToBus().apply { join() } }.apply { logln("Completed sendToBus in $this ms") }
 
     launch {
         println()
@@ -54,7 +53,7 @@ fun main(args: Array<String>) = runBlocking {
         delay(30, TimeUnit.SECONDS)
     }.apply { join() }
 
-    coroutineContext.cancelChildren() // If possible
+    coroutineContext.cancelChildren() // cancel all children to let main finish
     println()
     logln("Program ending.")
 }
@@ -269,7 +268,7 @@ suspend fun consumeHandleError2(rec: ReceiveChannel<String>) {
 fun showInt() = launch {
     logln("Demo for produce")
     val res = withTimeoutOrNull(10, TimeUnit.SECONDS) {
-        val pd = produceInt()
+        val pd = produceInt(coroutineContext)
         launch(coroutineContext) {
             pd.consumeEach {
                 logln("Got: $it")
@@ -282,9 +281,46 @@ fun showInt() = launch {
     }
 }
 
-suspend fun produceInt() = produce {
+fun sendToBus() = launch {
+    logln("Demo of Actor to make a event-bus")
+    val deferred = CompletableDeferred<Boolean>() // The trigger which can stop whole sendToBus coroutine.
+    val bus = eventBus(deferred)
+    produceInt(coroutineContext).consumeEach {
+        when {
+            it.toInt() <= 5 -> bus.send(ShowEvent(it))
+            else -> {
+                bus.send(StopEvent())
+                coroutineContext.cancelChildren() // Cancel all children to let produceInt finish
+            }
+        }
+    }
+    logln("Ready to go on:  ${deferred.await()}")
+    bus.close()
+}
+
+sealed class BaseEvent
+class StopEvent : BaseEvent()
+class ShowEvent(private val v: String) : BaseEvent() {
+    override fun toString() = v
+}
+
+fun eventBus(deferred: CompletableDeferred<Boolean>) = actor<BaseEvent> {
+    channel.consumeEach {
+        when (it) {
+            is ShowEvent -> {
+                logln("$it")
+            }
+            is StopEvent -> {
+                logln("$it")
+                deferred.complete(true)
+            }
+        }
+    }
+}
+
+suspend fun produceInt(coroutineContext: CoroutineContext) = produce(coroutineContext) {
     var i = 0
-    while (true) {
+    while (isActive) {
         send((++i).toString())
         delay(1000, TimeUnit.MILLISECONDS)
     }
