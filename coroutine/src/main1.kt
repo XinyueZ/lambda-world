@@ -281,41 +281,59 @@ fun showInt() = launch {
     }
 }
 
+sealed class BaseEvent(private val coroutineContext: CoroutineContext,
+                       private val deferred: CompletableDeferred<Boolean>,
+                       val handler: (ev: BaseEvent) -> Unit) {
+    fun stopEventBus() {
+        coroutineContext.cancelChildren()
+        deferred.complete(true)
+    }
+}
+
+class StopEvent(coroutineContext: CoroutineContext,
+                deferred: CompletableDeferred<Boolean>,
+                handler: (ev: BaseEvent) -> Unit) : BaseEvent(coroutineContext, deferred, handler)
+
+class ShowEvent<T>(coroutineContext: CoroutineContext,
+                   deferred: CompletableDeferred<Boolean>,
+                   private val v: T,
+                   handler: (ev: BaseEvent) -> Unit) : BaseEvent(coroutineContext, deferred, handler) {
+    override fun toString() = v.toString()
+}
+
+fun eventBus() = actor<BaseEvent> {
+    channel.consumeEach {
+        val cls = it::class.java
+        when {
+            cls.isAssignableFrom(ShowEvent::class.java) -> {
+                it.handler(it)
+            }
+            cls.isAssignableFrom(StopEvent::class.java) -> {
+                it.handler(it)
+                it.stopEventBus()
+            }
+        }
+    }
+}
+
 fun sendToBus() = launch {
     logln("Demo of Actor to make a event-bus")
     val deferred = CompletableDeferred<Boolean>() // The trigger which can stop whole sendToBus coroutine.
-    val bus = eventBus(deferred)
+    val bus = eventBus()
     produceInt(coroutineContext).consumeEach {
         when {
-            it.toInt() <= 5 -> bus.send(ShowEvent(it))
-            else -> {
-                bus.send(StopEvent())
-                coroutineContext.cancelChildren() // Cancel all children to let produceInt finish
-            }
+            it.toInt() <= 5 -> bus.send(ShowEvent(coroutineContext, deferred, it)
+            {
+                logln("$it")
+            })
+            else -> bus.send(StopEvent(coroutineContext, deferred)
+            {
+                logln("$it")
+            })
         }
     }
-    logln("Ready to go on:  ${deferred.await()}")
+    logln("Ready to go on: ${deferred.await()}")
     bus.close()
-}
-
-sealed class BaseEvent
-class StopEvent : BaseEvent()
-class ShowEvent(private val v: String) : BaseEvent() {
-    override fun toString() = v
-}
-
-fun eventBus(deferred: CompletableDeferred<Boolean>) = actor<BaseEvent> {
-    channel.consumeEach {
-        when (it) {
-            is ShowEvent -> {
-                logln("$it")
-            }
-            is StopEvent -> {
-                logln("$it")
-                deferred.complete(true)
-            }
-        }
-    }
 }
 
 suspend fun produceInt(coroutineContext: CoroutineContext) = produce(coroutineContext) {
