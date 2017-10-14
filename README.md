@@ -1,4 +1,5 @@
 # World of lambda
+
 - Here I added more and more usages about lambda.
 
 - This is not a tutorial.
@@ -9,6 +10,7 @@
 
 - Knowledge ranges from collection i.e foreach, stream to some high like [coroutines](https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md) .
 
+- Override of operator
 
 ### Foreach
 
@@ -45,3 +47,6 @@
 7. Ping-Pong to demo channel-fair.
 
 8. Error(Exception)-handling.
+
+### Override operator
+
