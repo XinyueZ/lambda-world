@@ -1,31 +1,42 @@
-class EventHandler(val name: String)
+fun main(args: Array<String>) {
+    csharp()
+}
 
-class Foo {
-    private var eventHandler: EventHandler? = null
+interface IEventHandler {
+    fun getSender(): Any?
+    operator fun plusAssign(eventHandler: IEventHandler)
+    operator fun minusAssign(eventHandler: IEventHandler)
+}
 
-    operator fun plusAssign(eventHandler: EventHandler) {
+class EventHandler(private val sender: Any? = null) : IEventHandler {
+    private var eventHandler: IEventHandler? = null
+
+    operator override fun plusAssign(eventHandler: IEventHandler) {
         this.eventHandler = eventHandler
     }
 
-    operator fun minusAssign(eventHandler: EventHandler) {
+    operator override fun minusAssign(eventHandler: IEventHandler) {
         this.eventHandler = null
     }
 
-    override fun toString(): String {
-        return eventHandler?.let { it.name } ?: kotlin.run { "no name" }
-    }
+    override fun getSender() = sender
+
+    override fun toString() = eventHandler?.getSender()?.toString() ?: kotlin.run { "no event-handler found" }
 }
 
-fun main(args: Array<String>) {
-    println("hello, operators")
+class Foo {
+    val click: IEventHandler = EventHandler()
+    override fun toString() = "Foo as sender"
+}
 
-    val ev = EventHandler("Event")
-    val foo = Foo()
-    foo += ev
-
-    println("$foo")
-
-    foo -= ev
-
-    println("$foo")
+private fun csharp() {
+    logln("Pretend to have C# event-handler")
+    with(Foo()) {
+        EventHandler(this).apply {
+            click += this
+            println("Fire event: $click")
+            click -= this
+            println("Fire event: $click")
+        }
+    }
 }
