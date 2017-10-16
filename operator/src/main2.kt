@@ -1,5 +1,8 @@
+import java.util.concurrent.TimeUnit
+
 fun main(args: Array<String>) {
     csharp()
+    collectionAddition()
 }
 
 interface IEventHandler {
@@ -39,4 +42,25 @@ private fun csharp() {
             println("Fire event: $click")
         }
     }
+}
+
+private fun collectionAddition() {
+    logln("Demo for operator on array")
+    val intArray = arrayListOf<Int>()
+    intArray += 1
+    intArray += 2
+    intArray += 3
+    intArray += 4
+    logln("Array result: $intArray")
+
+    val strList = List(5) {
+        TimeUnit.SECONDS.sleep(1)
+        System.currentTimeMillis().toString()
+    }
+    val newList = arrayListOf<String>()
+    for(i in 1..5) {
+        newList += i.toString()
+    }
+    newList += strList
+    logln("List result: $newList")
 }
