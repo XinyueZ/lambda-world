@@ -160,30 +160,40 @@ fun repeatUnderTimer() = launch(CommonPool) {
     }
 }
 
-fun combineContext() = launch(newSingleThreadContext("worker-parent")) {
+fun combineContext() = launch {
     logln("Evaluation the combination of contexts")
     logln("echo parent")
     val job = Job() //Only for fun, it can abort all launches and make child not child of parent.
-    launch(
-            newSingleThreadContext("worker-child 0") + coroutineContext  //+ job //JOB can make launch no more child of parent
-    ) {
-        delay(3, TimeUnit.SECONDS)
-        launch(
-                newSingleThreadContext("worker-child 1") + coroutineContext //+ job
-        ) {
-            delay(3, TimeUnit.SECONDS)
-            launch(
-                    newSingleThreadContext("worker-child 2") + coroutineContext //+ job
-            ) {
-                delay(3, TimeUnit.SECONDS)
-                logln("echo child 3")
+    val cxtChild_0 = newSingleThreadContext("worker-child 0")
+    val cxtChild_1 = newSingleThreadContext("worker-child 1")
+    val cxtChild_2 = newSingleThreadContext("worker-child 2")
+
+    cxtChild_0.use {
+        cxtChild_1.use {
+            cxtChild_2.use {
+                launch(
+                        cxtChild_0 + job   // + coroutineContext  //+ job //JOB can make launch no more child of parent
+                ) {
+                    delay(3, TimeUnit.SECONDS)
+                    launch(
+                            cxtChild_1 + job  //+ coroutineContext //+ job
+                    ) {
+                        delay(3, TimeUnit.SECONDS)
+                        launch(
+                                cxtChild_2 + job  //+ coroutineContext //+ job
+                        ) {
+                            delay(3, TimeUnit.SECONDS)
+                            logln("echo child 2")
+                        }
+                        logln("echo child 1")
+                    }
+                    logln("echo child 0")
+                }
+                job.cancel() // If wanna see echo of children...., comment this line.
+                //coroutineContext.cancel() // If wanna see echo of children...., comment this line.
             }
-            logln("echo child 2")
         }
-        logln("echo child 1")
     }
-    //job.cancel() // If wanna see echo of children...., comment this line.
-    //coroutineContext.cancel() // If wanna see echo of children...., comment this line.
 }
 
 class Ball(
