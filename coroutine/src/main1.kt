@@ -234,6 +234,8 @@ fun ping_pong() = launch(newSingleThreadContext("Ping Pong stage")) {
     if (res == null) {
         println()
         logln("---------------------------------------------------------------------------")
+        logln("Ping-Pong end")
+        logln("---------------------------------------------------------------------------")
         chan.close()
     }
 }
