@@ -50,3 +50,6 @@
 
 ### Override operator
 
+### Standard inline functions
+> The functions like ```takeIf```, ```unless``` ...
+
