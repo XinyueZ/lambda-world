@@ -1,8 +1,13 @@
 import java.util.concurrent.TimeUnit
 
+class SomeHandler(var name: String = "") {
+    override fun toString() = name
+}
+
 fun main(args: Array<String>) {
     takeIf()
     takeUnless()
+    also()
 }
 
 fun takeIf() {
@@ -41,4 +46,9 @@ fun takeUnless() {
             logln("Even: $it")
         }
     }
+}
+
+fun also() {
+    logln("Demo how to use [also]")
+    SomeHandler().also { it.name = "bla bla bla using ALSO." }.let { logln(it.toString()) }
 }
