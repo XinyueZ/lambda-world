@@ -8,6 +8,8 @@ fun main(args: Array<String>) {
     takeIf()
     takeUnless()
     also()
+    logln(run1())
+    logln(run2().toString())
 }
 
 fun takeIf() {
@@ -51,4 +53,19 @@ fun takeUnless() {
 fun also() {
     logln("Demo how to use [also]")
     SomeHandler().also { it.name = "bla bla bla using ALSO." }.let { logln(it.toString()) }
+}
+
+fun run1(): String {
+    logln("Demo how to use [T.run]")
+    return SomeHandler().also { it.name = "bla bla bla using ALSO." }.run {
+        name = "I have done some changing."
+        toString()
+    }
+}
+
+fun run2(): Int {
+    logln("Demo how to use [run]")
+    return run {
+        1234234
+    }
 }
