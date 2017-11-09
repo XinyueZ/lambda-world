@@ -53,3 +53,5 @@
 ### Standard inline functions
 > The functions like ```takeIf```, ```unless``` ...
 
+### Functions feature in K-lang
+
