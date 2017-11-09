@@ -12,4 +12,5 @@ fun lambdaInMap() {
     val map = mapOf(func1 to "hello,world", func2 to "bye, world")
     logln(map[func1]!!)
     logln(map[func2]!!)
+    println(map[{ logln("lambdaInMap") }]) // -> null
 }
