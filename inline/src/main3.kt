@@ -24,8 +24,8 @@ fun takeIf() {
         it.takeIf {
             it % 2 == 0L
         }?.let {
-            logln("Even: $it")
-        } ?: run {
+                logln("Even: $it")
+            } ?: run {
             logln("Odd: $it")
         }
     }
@@ -43,8 +43,8 @@ fun takeUnless() {
         it.takeUnless {
             it % 2 == 0L
         }?.let {
-            logln("Odd: $it")
-        } ?: run {
+                logln("Odd: $it")
+            } ?: run {
             logln("Even: $it")
         }
     }

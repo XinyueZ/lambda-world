@@ -40,8 +40,16 @@ fun main(args: Array<String>) = runBlocking {
     }.apply {
         logln("Completed repeatFunction in $this ms")
     }
-    measureTimeMillis { repeatUnderTimer().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply { logln("Completed repeatUnderTimer in $this ms") }
-    measureTimeMillis { combineContext().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply { logln("Completed combineContext in $this ms") }
+    measureTimeMillis { repeatUnderTimer().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply {
+        logln(
+            "Completed repeatUnderTimer in $this ms"
+        )
+    }
+    measureTimeMillis { combineContext().apply { join()/*without join(), all outputs show later between results of rest of demos*/ } }.apply {
+        logln(
+            "Completed combineContext in $this ms"
+        )
+    }
     measureTimeMillis { handleError2().apply { join() } }.apply { logln("Completed handleError2 in $this ms") }
     measureTimeMillis { ping_pong().apply { join() } }.apply { logln("Completed ping_pong in $this ms") }
     measureTimeMillis { showInt().apply { join() } }.apply { logln("Completed showInt in $this ms") }
@@ -172,15 +180,15 @@ fun combineContext() = launch {
         cxtChild_1.use {
             cxtChild_2.use {
                 launch(
-                        cxtChild_0 + job   // + coroutineContext  //+ job //JOB can make launch no more child of parent
+                    cxtChild_0 + job   // + coroutineContext  //+ job //JOB can make launch no more child of parent
                 ) {
                     delay(3, TimeUnit.SECONDS)
                     launch(
-                            cxtChild_1 + job  //+ coroutineContext //+ job
+                        cxtChild_1 + job  //+ coroutineContext //+ job
                     ) {
                         delay(3, TimeUnit.SECONDS)
                         launch(
-                                cxtChild_2 + job  //+ coroutineContext //+ job
+                            cxtChild_2 + job  //+ coroutineContext //+ job
                         ) {
                             delay(3, TimeUnit.SECONDS)
                             logln("echo child 2")
@@ -197,8 +205,8 @@ fun combineContext() = launch {
 }
 
 class Ball(
-        var who: String = "",
-        var hit: Int = 0
+    var who: String = "",
+    var hit: Int = 0
 ) {
     override fun toString() = "Get from $who, hit = $hit"
 }
@@ -293,23 +301,29 @@ fun showInt() = launch {
     }
 }
 
-sealed class BaseEvent(private val coroutineContext: CoroutineContext,
-                       private val deferred: CompletableDeferred<Boolean>,
-                       val handler: (ev: BaseEvent) -> Unit) {
+sealed class BaseEvent(
+    private val coroutineContext: CoroutineContext,
+    private val deferred: CompletableDeferred<Boolean>,
+    val handler: (ev: BaseEvent) -> Unit
+) {
     fun stopEventBus() {
         coroutineContext.cancelChildren()
         deferred.complete(true)
     }
 }
 
-class StopEvent(coroutineContext: CoroutineContext,
-                deferred: CompletableDeferred<Boolean>,
-                handler: (ev: BaseEvent) -> Unit) : BaseEvent(coroutineContext, deferred, handler)
+class StopEvent(
+    coroutineContext: CoroutineContext,
+    deferred: CompletableDeferred<Boolean>,
+    handler: (ev: BaseEvent) -> Unit
+) : BaseEvent(coroutineContext, deferred, handler)
 
-class ShowEvent<T>(coroutineContext: CoroutineContext,
-                   deferred: CompletableDeferred<Boolean>,
-                   private val v: T,
-                   handler: (ev: BaseEvent) -> Unit) : BaseEvent(coroutineContext, deferred, handler) {
+class ShowEvent<T>(
+    coroutineContext: CoroutineContext,
+    deferred: CompletableDeferred<Boolean>,
+    private val v: T,
+    handler: (ev: BaseEvent) -> Unit
+) : BaseEvent(coroutineContext, deferred, handler) {
     override fun toString() = v.toString()
 }
 
@@ -330,7 +344,8 @@ fun eventBus() = actor<BaseEvent> {
 
 fun sendToBus() = launch {
     logln("Demo of Actor to make a event-bus")
-    val deferred = CompletableDeferred<Boolean>() // The trigger which can stop whole sendToBus coroutine.
+    val deferred =
+        CompletableDeferred<Boolean>() // The trigger which can stop whole sendToBus coroutine.
     val bus = eventBus()
     produceInt(coroutineContext).consumeEach {
         when {
@@ -380,7 +395,8 @@ private fun asyncGetNum2() = async(CommonPool) {
     }
 }
 
-private suspend fun getResponse() = Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
+private suspend fun getResponse() =
+    Retrofit.Builder().baseUrl("http://rest-service.guides.spring.io/")
         .addConverterFactory(GsonConverterFactory.create())
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .build().create(Service::class.java).greeting().execute()

@@ -92,15 +92,17 @@ fun sumParallel(vals: List<String>) {
 fun sumAdvanced(vals: List<String>) {
     println("[stream + stream] on list")
     vals.stream().flatMapToInt {
-        Stream.of(when (it) {
-            "one" -> Pair(1, 1)//index or position, value
-            "two" -> Pair(2, 2)
-            "three" -> Pair(3, 3)
-            "four" -> Pair(4, 4)
-            "five" -> Pair(5, 5)
-            "six" -> Pair(6, 7)
-            else -> null
-        }).filter {
+        Stream.of(
+            when (it) {
+                "one" -> Pair(1, 1)//index or position, value
+                "two" -> Pair(2, 2)
+                "three" -> Pair(3, 3)
+                "four" -> Pair(4, 4)
+                "five" -> Pair(5, 5)
+                "six" -> Pair(6, 7)
+                else -> null
+            }
+        ).filter {
             if (it!!.first == vals.size) print(it.first.toString() + " = ") else print(it.first.toString() + " + ")
             true
         }.flatMapToInt { IntStream.of(it!!.second) }

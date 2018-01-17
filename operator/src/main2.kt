@@ -24,7 +24,8 @@ class EventHandler(private val sender: Any? = null) : IEventHandler {
 
     override fun getSender() = sender
 
-    override fun toString() = eventHandler?.getSender()?.toString() ?: kotlin.run { "no event-handler found" }
+    override fun toString() =
+        eventHandler?.getSender()?.toString() ?: kotlin.run { "no event-handler found" }
 }
 
 class Foo {
@@ -58,7 +59,7 @@ private fun collectionAddition() {
         System.currentTimeMillis().toString()
     }
     val newList = arrayListOf<String>()
-    for(i in 1..5) {
+    for (i in 1..5) {
         newList += i.toString()
     }
     newList += strList
