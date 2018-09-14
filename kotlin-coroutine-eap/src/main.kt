@@ -7,6 +7,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 fun main(args: Array<String>) {
     //impatientWait()
@@ -15,7 +16,8 @@ fun main(args: Array<String>) {
     //patientWaitUntilChildFinish()
     //patientWaitUntilChildInOtherScopeFinish()
     //patientWaitUntilChildInOtherScopeCancelled()
-    patientWaitUntilCancelHeavyJob()
+    //patientWaitUntilCancelHeavyJob()
+    patientWaitUntilTimeout()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -107,7 +109,7 @@ fun patientWaitUntilChildInOtherScopeCancelled() = runBlocking {
     coroutineScope {
         //An other long-time blocking which doesn't complete until child finishes.
         //A new scope which blocks main(runBlocking).
-        val child = this.launch(Dispatchers.Default)  {
+        val child = this.launch(Dispatchers.Default) {
             //A child of the new scope
             delay(newScopeBkTaskDuration)
             println("receiving...")
@@ -167,4 +169,37 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
     println("I am first, I want to wait until my child being finishing.")
     //An outer coroutine (runBlocking in our example) does not complete until all the coroutines launched in its scope complete.
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#timeout
+fun patientWaitUntilTimeout() = runBlocking {
+    val bkTaskDuration = 20 * 1000L
+    val timeout = 5000L
+    val longJobDuration = 5000L
+
+    launch {
+        //This is my child(runBlocking main)
+        delay(bkTaskDuration)
+        println("messaging...")
+    }
+
+    withTimeoutOrNull(timeout) {
+        //A child of the new scope
+        var itor = 100000000000000
+
+        try {
+            while (itor >= 0 && isActive) { //Remove isActive, the job is so heavy and cannot be cancelled.
+                println("receiving...$itor")
+                itor--
+            }
+        } finally {
+            withContext(NonCancellable) {
+                //Without this, the delay(5000)will block finally{}, and no println(), however, the finally will be cancelled.
+                delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long.
+                println("final receiving...$itor")
+            }
+        }
+    }
+
+    println("I am first, I want to wait until my child being finishing.")
 }
