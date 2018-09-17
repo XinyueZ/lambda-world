@@ -27,9 +27,13 @@ fun main(args: Array<String>) {
     //sequential()
     //concurrent()
     //concurrent(true)
+<<<<<<< HEAD
     //structuredConcurrency()
 
     dispatchers()
+=======
+    structuredConcurrency()
+>>>>>>> ac7de17d56f7fc6ba4214951c49c4c5aae46d70d
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
