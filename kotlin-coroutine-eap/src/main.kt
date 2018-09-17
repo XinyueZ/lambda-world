@@ -1,6 +1,7 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -221,10 +222,12 @@ fun sequential() = runBlocking {
 
 private fun doOne(): Int {
     println("do one")
+    delay(3000)
     return 1
 }
 
-private fun doTwo(): Int {
+private suspend fun doTwo(): Int {
     println("do two")
+    delay(3000)
     return 2
 }
