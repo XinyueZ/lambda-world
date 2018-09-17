@@ -5,6 +5,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -34,7 +35,9 @@ fun main(args: Array<String>) {
     //concurrent()
     //concurrent(true)
     //structuredConcurrency()
-    dispatchers()
+    //dispatchers()
+
+    longTimeChildWouldBeStopped()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -361,4 +364,38 @@ fun dispatchers() = runBlocking {
 
         log("newSingleThreadContext")
     }
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#children-of-a-coroutine
+fun longTimeChildWouldBeStopped() = runBlocking {
+    val runner = launch {
+        //Inherits the context (and thus dispatcher) from the CoroutineScope that it is being launched from.
+        //In this case, it inherits the context of the main runBlocking coroutine which runs in the main thread.
+
+        GlobalScope.launch {
+            (0..1000000000).forEach {
+                println("$it")
+            }
+        }
+
+        launch (Dispatchers.IO){
+            //Creates a new thread for the coroutine to run. A dedicated thread is a very expensive resource.
+            //In a real application it must be either released, when no longer needed, using close function,
+            //or stored in a top-level variable and reused throughout the application.
+
+            repeat(10000000000000000.toInt()) {
+                if(isActive) {
+                    println("Hi, Peter: $isActive")
+                } else {
+                    return@repeat
+                }
+            }
+        }
+    }
+
+    println("Long time child.....")
+    delay(2000)
+    runner.cancelAndJoin()
+    delay(5000)
+    println("Wait some minutes to see what GlobalScope.launch is still doing.")
 }
