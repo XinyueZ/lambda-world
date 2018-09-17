@@ -1,3 +1,4 @@
+import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.NonCancellable
@@ -21,7 +22,8 @@ fun main(args: Array<String>) {
     //patientWaitUntilTimeout()
 
     //sequential()
-    concurrent()
+    //concurrent()
+    concurrent(true)
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -226,16 +228,39 @@ fun sequential() = runBlocking {
 /**
  * [lazy] is true, then starting each job explicitly.
  */
-fun concurrent(lazy:Boolean = false) = runBlocking {
-    val one = async { doOne() }
-    val two  = async { doTwo() }
-    //one and two doesn't block each other.
+fun concurrent(lazy: Boolean = false) = runBlocking {
+    if (lazy) {
+        val one = async(start = LAZY) { doOne() }
+        val two = async(start = LAZY) { doTwo() }
 
-    //Show this firstly, because one, two don't block.
-    //runBlocking hasn't been blocked by one or two
-    println("Hi one, two")
-    //After running of one and two then code is operating on these.
-    println("result: ${one.await() + two.await()}")
+        //Explicitly start concurrent jobs.
+        one.start() // start the first one
+        two.start() // start the second one
+
+        //one and two doesn't block each other.
+
+        //Show this firstly, because one, two don't block.
+        //runBlocking hasn't been blocked by one or two
+        println("Command on one, two")
+        //After running of one and two then code is operating on these.
+        println("result: ${one.await() + two.await()}")
+
+        /*
+         * that if we have called await in println and omitted start on individual coroutines,
+         * then we would have got the sequential behaviour as await starts the coroutine execution and
+         * waits for the execution to finish, which is not the intended use-case for laziness.
+         */
+    } else {
+        val one = async { doOne() }
+        val two = async { doTwo() }
+        //one and two doesn't block each other.
+
+        //Show this firstly, because one, two don't block.
+        //runBlocking hasn't been blocked by one or two
+        println("Hi one, two")
+        //After running of one and two then code is operating on these.
+        println("result: ${one.await() + two.await()}")
+    }
 }
 
 private suspend fun doOne(): Int {
