@@ -209,9 +209,13 @@ fun patientWaitUntilTimeout() = runBlocking {
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#sequential-by-default
 fun sequential() = runBlocking {
     //The sequential is default in coroutine.
-    //For concurrent try to use async{} explicitly, see example below.
+    //For concurrent try to use async{} explicitly, see example below: concurrent
     val one = doOne()
+    //one blocks
     val two = doTwo()
+    //two blocks
+
+    //After blocking of one and two then code is operating on these.
     println("result: ${one + two}")
 }
 
