@@ -20,7 +20,8 @@ fun main(args: Array<String>) {
     //patientWaitUntilCancelHeavyJob()
     //patientWaitUntilTimeout()
 
-    sequential()
+    //sequential()
+    concurrent()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -221,7 +222,23 @@ fun sequential() = runBlocking {
     println("result: ${one + two}")
 }
 
-private fun doOne(): Int {
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#concurrent-using-async
+/**
+ * [lazy] is true, then starting each job explicitly.
+ */
+fun concurrent(lazy:Boolean = false) = runBlocking {
+    val one = async { doOne() }
+    val two  = async { doTwo() }
+    //one and two doesn't block each other.
+
+    //Show this firstly, because one, two don't block.
+    //runBlocking hasn't been blocked by one or two
+    println("Hi one, two")
+    //After running of one and two then code is operating on these.
+    println("result: ${one.await() + two.await()}")
+}
+
+private suspend fun doOne(): Int {
     println("do one")
     delay(3000)
     return 1
