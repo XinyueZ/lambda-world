@@ -9,6 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -26,7 +27,9 @@ fun main(args: Array<String>) {
     //sequential()
     //concurrent()
     //concurrent(true)
-    structuredConcurrency()
+    //structuredConcurrency()
+
+    dispatchers()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -313,4 +316,44 @@ private suspend fun doTwo(): Int {
     println("do two")
     delay(3000)
     return 2
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#dispatchers-and-threads
+fun dispatchers() = runBlocking {
+    launch {
+        //Inherits the context (and thus dispatcher) from the CoroutineScope that it is being launched from.
+        //In this case, it inherits the context of the main runBlocking coroutine which runs in the main thread.
+
+        println("main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
+    }
+    launch(Dispatchers.Unconfined) {
+        //The Dispatchers.Unconfined coroutine dispatcher starts coroutine in the caller thread,
+        //but only until the first suspension point. After suspension it resumes in the thread
+        //that is fully determined by the suspending function that was invoked.
+        //Unconfined dispatcher is appropriate when coroutine does not consume CPU time nor updates
+        //any shared data (like UI) that is confined to a specific thread.
+
+        println("Unconfined      : I'm working in thread ${Thread.currentThread().name}")
+        delay(500)
+        println("Unconfined      : After delay in thread ${Thread.currentThread().name}")
+
+        /*
+         * the coroutine that had inherited context of runBlocking {...} continues to execute in the main thread,
+         * while the unconfined one had resumed in the default executor thread that delay function is using.
+         */
+    }
+    launch(Dispatchers.Default) {
+        //The default dispatcher, that is used when coroutines are launched in GlobalScope,
+        //is represented by Dispatchers.Default and uses shared background pool of threads,
+        //so launch(Dispatchers.Default) { ... } uses the same dispatcher as GlobalScope.launch { ... }.
+
+        println("Default               : I'm working in thread ${Thread.currentThread().name}")
+    }
+    launch(newSingleThreadContext("MyOwnThread")) {
+        //Creates a new thread for the coroutine to run. A dedicated thread is a very expensive resource.
+        //In a real application it must be either released, when no longer needed, using close function,
+        //or stored in a top-level variable and reused throughout the application.
+
+        println("newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+    }
 }
