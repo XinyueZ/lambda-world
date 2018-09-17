@@ -17,7 +17,9 @@ fun main(args: Array<String>) {
     //patientWaitUntilChildInOtherScopeFinish()
     //patientWaitUntilChildInOtherScopeCancelled()
     //patientWaitUntilCancelHeavyJob()
-    patientWaitUntilTimeout()
+    //patientWaitUntilTimeout()
+
+    sequential()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -202,4 +204,23 @@ fun patientWaitUntilTimeout() = runBlocking {
     }
 
     println("I am first, I want to wait until my child being finishing.")
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#sequential-by-default
+fun sequential() = runBlocking {
+    //The sequential is default in coroutine.
+    //For concurrent try to use async{} explicitly, see example below.
+    val one = doOne()
+    val two = doTwo()
+    println("result: ${one + two}")
+}
+
+private fun doOne(): Int {
+    println("do one")
+    return 1
+}
+
+private fun doTwo(): Int {
+    println("do two")
+    return 2
 }
