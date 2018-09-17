@@ -37,7 +37,8 @@ fun main(args: Array<String>) {
     //structuredConcurrency()
     //dispatchers()
 
-    longTimeChildWouldBeStopped()
+    //longTimeChildWouldBeStopped()
+    parentalResponsibility()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -398,4 +399,21 @@ fun longTimeChildWouldBeStopped() = runBlocking {
     runner.cancelAndJoin()
     delay(5000)
     println("Wait some minutes to see what GlobalScope.launch is still doing.")
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#parental-responsibilities
+fun parentalResponsibility() = runBlocking {
+    val runner = launch {
+        launch (Dispatchers.IO){
+            delay(10 * 1000)
+            println("Internal: I'm done.")
+        }
+        delay(5 * 1000)
+
+        println("I must wait Internal done.")
+    }
+
+    println("I'm waiting for all children.")
+    runner.join()//Explicitly wait until runner and its children being done.
+    println("All done")
 }
