@@ -1,8 +1,10 @@
 import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -23,7 +25,8 @@ fun main(args: Array<String>) {
 
     //sequential()
     //concurrent()
-    concurrent(true)
+    //concurrent(true)
+    structuredConcurrency()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -261,6 +264,43 @@ fun concurrent(lazy: Boolean = false) = runBlocking {
         //After running of one and two then code is operating on these.
         println("result: ${one.await() + two.await()}")
     }
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#structured-concurrency-with-async
+fun structuredConcurrency() = runBlocking {
+    launch(Dispatchers.IO) {
+        //Don't want to block println below with launch{},
+        //remove this if you want to see println later after trouble-maker runs.
+
+        try {
+            troubleMaker()
+        } catch (e: Exception) {
+            println("Trouble caused by: $e")
+        }
+    }
+    println("Rescued from trouble-maker.")
+}
+
+private suspend fun troubleMaker() = coroutineScope {
+    val y = async {
+        try {
+            delay(5000) // Something goes run between doOne and doTwo.
+            val y = 1 / 0
+            println("I got: $y")
+        } finally {
+            println("Something wrong with the expression: 1/0")
+        }
+    }
+    val z = async {
+        val z = doOne() + doTwo()
+        println("one + two = $z") //Should not show, something goes run above.
+    }
+    awaitAll(y, z)
+    /**
+     * Run below only for results to operate, like x + y etc.
+     */
+    y.await()
+    z.await()
 }
 
 private suspend fun doOne(): Int {
