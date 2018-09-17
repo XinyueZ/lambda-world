@@ -217,6 +217,7 @@ fun sequential() = runBlocking {
     //two blocks
 
     //After blocking of one and two then code is operating on these.
+    println("You're so lazy, one, two")
     println("result: ${one + two}")
 }
 
