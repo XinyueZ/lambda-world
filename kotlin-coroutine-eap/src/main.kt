@@ -14,6 +14,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#debugging-coroutines-and-threads
+// Run without -Dkotlinx.coroutines.debug
+//fun log(msg: String) = Thread.currentThread().run { println("[$name @coroutine#$id] $msg") }
+// Run with -Dkotlinx.coroutines.debug
+fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
+
 fun main(args: Array<String>) {
     //impatientWait()
     //patientWait()
@@ -37,9 +43,9 @@ fun impatientWait() = runBlocking {
     val impatientWait = 1000L
     GlobalScope.launch {
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
-    println("I am first, I want to wait: $impatientWait.")
+    log("I am first, I want to wait: $impatientWait.")
     delay(impatientWait)
 }
 
@@ -49,9 +55,9 @@ fun patientWait() = runBlocking {
     val patientWait = 5000L * 5
     GlobalScope.launch {
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
-    println("I am first, I want to wait: $patientWait.")
+    log("I am first, I want to wait: $patientWait.")
     delay(patientWait)
 }
 
@@ -60,9 +66,9 @@ fun patientWaitUntilOtherFinish() = runBlocking {
     val bkTaskDuration = 5000L
     val other = GlobalScope.launch {
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
-    println("I am first, I want to wait until other finishing.")
+    log("I am first, I want to wait until other finishing.")
     //Main coroutine (runBlocking) is not tied to the duration of the background job in any way.
     other.join()
 }
@@ -73,9 +79,9 @@ fun patientWaitUntilChildFinish() = runBlocking {
     this.launch {
         //This is my child(runBlocking main)
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
-    println("I am first, I want to wait until my child being finishing.")
+    log("I am first, I want to wait until my child being finishing.")
     //An outer coroutine (runBlocking in our example) does not complete until all the coroutines launched in its scope complete.
 }
 
@@ -86,7 +92,7 @@ fun patientWaitUntilChildInOtherScopeFinish() = runBlocking {
     launch {
         //This is my child(runBlocking main)
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
 
     coroutineScope {
@@ -95,12 +101,12 @@ fun patientWaitUntilChildInOtherScopeFinish() = runBlocking {
         this.launch {
             //A child of the new scope
             delay(newScopeBkTaskDuration)
-            println("receiving...")
+            log("receiving...")
         }
-        println("The child in the new scope.")
+        log("The child in the new scope.")
     }
 
-    println("I am first, I want to wait until my child being finishing.")
+    log("I am first, I want to wait until my child being finishing.")
     //An outer coroutine (runBlocking in our example) does not complete until all the coroutines launched in its scope complete.
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
 }
@@ -114,7 +120,7 @@ fun patientWaitUntilChildInOtherScopeCancelled() = runBlocking {
     launch {
         //This is my child(runBlocking main)
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
 
     coroutineScope {
@@ -123,16 +129,16 @@ fun patientWaitUntilChildInOtherScopeCancelled() = runBlocking {
         val child = this.launch(Dispatchers.Default) {
             //A child of the new scope
             delay(newScopeBkTaskDuration)
-            println("receiving...")
+            log("receiving...")
         }
-        println("The child in the new scope.")
+        log("The child in the new scope.")
         delay(cancelDuration)
         child.cancel()
         child.join()
-        println("I have no patient, cancel this child.")
+        log("I have no patient, cancel this child.")
     }
 
-    println("I am first, I want to wait until my child being finishing.")
+    log("I am first, I want to wait until my child being finishing.")
     //An outer coroutine (runBlocking in our example) does not complete until all the coroutines launched in its scope complete.
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
 }
@@ -146,7 +152,7 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
     launch {
         //This is my child(runBlocking main)
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
 
     coroutineScope {
@@ -158,26 +164,26 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
 
             try {
                 while (itor >= 0 && isActive) { //Remove isActive, the job is so heavy and cannot be cancelled.
-                    println("receiving...$itor")
+                    log("receiving...$itor")
                     itor--
                 }
             } finally {
                 withContext(NonCancellable) {
-                    //Without this, the delay(5000)will block finally{}, and no println(), however, the finally will be cancelled.
+                    //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
                     delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long.
-                    println("final receiving...$itor")
+                    log("final receiving...$itor")
                 }
             }
         }
-        println("The child in the new scope.")
+        log("The child in the new scope.")
         delay(cancelDuration)
         child.cancel()
-        println("Wait for stop.")
+        log("Wait for stop.")
         child.join()
-        println("I have no patient, cancel this child.")
+        log("I have no patient, cancel this child.")
     }
 
-    println("I am first, I want to wait until my child being finishing.")
+    log("I am first, I want to wait until my child being finishing.")
     //An outer coroutine (runBlocking in our example) does not complete until all the coroutines launched in its scope complete.
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
 }
@@ -191,7 +197,7 @@ fun patientWaitUntilTimeout() = runBlocking {
     launch {
         //This is my child(runBlocking main)
         delay(bkTaskDuration)
-        println("messaging...")
+        log("messaging...")
     }
 
     withTimeoutOrNull(timeout) {
@@ -200,19 +206,19 @@ fun patientWaitUntilTimeout() = runBlocking {
 
         try {
             while (itor >= 0 && isActive) { //Remove isActive, the job is so heavy and cannot be cancelled.
-                println("receiving...$itor")
+                log("receiving...$itor")
                 itor--
             }
         } finally {
             withContext(NonCancellable) {
-                //Without this, the delay(5000)will block finally{}, and no println(), however, the finally will be cancelled.
+                //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
                 delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long.
-                println("final receiving...$itor")
+                log("final receiving...$itor")
             }
         }
     }
 
-    println("I am first, I want to wait until my child being finishing.")
+    log("I am first, I want to wait until my child being finishing.")
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#sequential-by-default
@@ -225,8 +231,8 @@ fun sequential() = runBlocking {
     //two blocks
 
     //After blocking of one and two then code is operating on these.
-    println("You're so lazy, one, two")
-    println("result: ${one + two}")
+    log("You're so lazy, one, two")
+    log("result: ${one + two}")
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#concurrent-using-async
@@ -246,12 +252,12 @@ fun concurrent(lazy: Boolean = false) = runBlocking {
 
         //Show this firstly, because one, two don't block.
         //runBlocking hasn't been blocked by one or two
-        println("Command on one, two")
+        log("Command on one, two")
         //After running of one and two then code is operating on these.
-        println("result: ${one.await() + two.await()}")
+        log("result: ${one.await() + two.await()}")
 
         /*
-         * that if we have called await in println and omitted start on individual coroutines,
+         * that if we have called await in log and omitted start on individual coroutines,
          * then we would have got the sequential behaviour as await starts the coroutine execution and
          * waits for the execution to finish, which is not the intended use-case for laziness.
          */
@@ -262,25 +268,25 @@ fun concurrent(lazy: Boolean = false) = runBlocking {
 
         //Show this firstly, because one, two don't block.
         //runBlocking hasn't been blocked by one or two
-        println("Hi one, two")
+        log("Hi one, two")
         //After running of one and two then code is operating on these.
-        println("result: ${one.await() + two.await()}")
+        log("result: ${one.await() + two.await()}")
     }
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#structured-concurrency-with-async
 fun structuredConcurrency() = runBlocking {
     launch(Dispatchers.IO) {
-        //Don't want to block println below with launch{},
-        //remove this if you want to see println later after trouble-maker runs.
+        //Don't want to block log below with launch{},
+        //remove this if you want to see log later after trouble-maker runs.
 
         try {
             troubleMaker()
         } catch (e: Exception) {
-            println("Trouble caused by: $e")
+            log("Trouble caused by: $e")
         }
     }
-    println("Rescued from trouble-maker.")
+    log("Rescued from trouble-maker.")
 }
 
 private suspend fun troubleMaker() = coroutineScope {
@@ -288,14 +294,14 @@ private suspend fun troubleMaker() = coroutineScope {
         try {
             delay(5000) // Something goes run between doOne and doTwo.
             val y = 1 / 0
-            println("I got: $y")
+            log("I got: $y")
         } finally {
-            println("Something wrong with the expression: 1/0")
+            log("Something wrong with the expression: 1/0")
         }
     }
     val z = async {
         val z = doOne() + doTwo()
-        println("one + two = $z") //Should not show, something goes run above.
+        log("one + two = $z") //Should not show, something goes run above.
     }
     awaitAll(y, z)
     /**
@@ -306,13 +312,13 @@ private suspend fun troubleMaker() = coroutineScope {
 }
 
 private suspend fun doOne(): Int {
-    println("do one")
+    log("do one")
     delay(3000)
     return 1
 }
 
 private suspend fun doTwo(): Int {
-    println("do two")
+    log("do two")
     delay(3000)
     return 2
 }
@@ -323,7 +329,7 @@ fun dispatchers() = runBlocking {
         //Inherits the context (and thus dispatcher) from the CoroutineScope that it is being launched from.
         //In this case, it inherits the context of the main runBlocking coroutine which runs in the main thread.
 
-        println("main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
+        log("main runBlocking")
     }
     launch(Dispatchers.Unconfined) {
         //The Dispatchers.Unconfined coroutine dispatcher starts coroutine in the caller thread,
@@ -332,9 +338,9 @@ fun dispatchers() = runBlocking {
         //Unconfined dispatcher is appropriate when coroutine does not consume CPU time nor updates
         //any shared data (like UI) that is confined to a specific thread.
 
-        println("Unconfined      : I'm working in thread ${Thread.currentThread().name}")
+        log("Unconfined")
         delay(500)
-        println("Unconfined      : After delay in thread ${Thread.currentThread().name}")
+        log("Unconfined")
 
         /*
          * the coroutine that had inherited context of runBlocking {...} continues to execute in the main thread,
@@ -346,13 +352,13 @@ fun dispatchers() = runBlocking {
         //is represented by Dispatchers.Default and uses shared background pool of threads,
         //so launch(Dispatchers.Default) { ... } uses the same dispatcher as GlobalScope.launch { ... }.
 
-        println("Default               : I'm working in thread ${Thread.currentThread().name}")
+        log("Default")
     }
     launch(newSingleThreadContext("MyOwnThread")) {
         //Creates a new thread for the coroutine to run. A dedicated thread is a very expensive resource.
         //In a real application it must be either released, when no longer needed, using close function,
         //or stored in a top-level variable and reused throughout the application.
 
-        println("newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+        log("newSingleThreadContext")
     }
 }
