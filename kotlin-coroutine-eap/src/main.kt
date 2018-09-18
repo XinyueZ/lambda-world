@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
     /**
      * Advance topic of coroutine, normally we don't use in app development.
      */
-    advanceTopicThreadLocal()
+    //advanceTopicThreadLocal()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -179,9 +179,10 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
                     itor--
                 }
             } finally {
-                withContext(NonCancellable) {
+                log("I am killed.")
+                withContext(NonCancellable) {//Keep the following long-term codes to be proceed.
                     //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
-                    delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long.
+                    delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long,however,it was killed previously.
                     log("final receiving...$itor")
                 }
             }
