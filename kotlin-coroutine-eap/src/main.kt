@@ -3,6 +3,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancelAndJoin
@@ -14,6 +15,7 @@ import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.yield
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#debugging-coroutines-and-threads
 // Run without -Dkotlinx.coroutines.debug
@@ -38,7 +40,12 @@ fun main(args: Array<String>) {
     //dispatchers()
 
     //longTimeChildWouldBeStopped()
-    parentalResponsibility()
+    //parentalResponsibility()
+
+    /**
+     * Advance topic of coroutine, normally we don't use in app development.
+     */
+    advanceTopicThreadLocal()
 }
 
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
@@ -379,13 +386,13 @@ fun longTimeChildWouldBeStopped() = runBlocking {
             }
         }
 
-        launch (Dispatchers.IO){
+        launch(Dispatchers.IO) {
             //Creates a new thread for the coroutine to run. A dedicated thread is a very expensive resource.
             //In a real application it must be either released, when no longer needed, using close function,
             //or stored in a top-level variable and reused throughout the application.
 
             repeat(10000000000000000.toInt()) {
-                if(isActive) {
+                if (isActive) {
                     println("Hi, Peter: $isActive")
                 } else {
                     return@repeat
@@ -404,7 +411,7 @@ fun longTimeChildWouldBeStopped() = runBlocking {
 //https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#parental-responsibilities
 fun parentalResponsibility() = runBlocking {
     val runner = launch {
-        launch (Dispatchers.IO){
+        launch(Dispatchers.IO) {
             delay(10 * 1000)
             println("Internal: I'm done.")
         }
@@ -416,4 +423,21 @@ fun parentalResponsibility() = runBlocking {
     println("I'm waiting for all children.")
     runner.join()//Explicitly wait until runner and its children being done.
     println("All done")
+}
+
+val threadLocal = ThreadLocal<String?>()
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#thread-local-data
+fun advanceTopicThreadLocal() = runBlocking {
+    //This sample explains how a coroutine runs based on different threads or thread from a thread-pool.
+    //There's a shared value which can be accessed between threads.
+
+    threadLocal.set("main")
+    log("Pre-main, thread local value: '${threadLocal.get()}'")
+    val job = launch(Dispatchers.Default + threadLocal.asContextElement(value = "launch")) {
+        log("Launch start, thread local value: '${threadLocal.get()}'")
+        yield() //Give one other thread from dispatcher of this launch{}.
+        log("After yield, thread local value: '${threadLocal.get()}'")
+    }
+    job.join()
+    log("Post-main, thread local value: '${threadLocal.get()}'")
 }
