@@ -293,6 +293,9 @@ fun structuredConcurrency() = runBlocking {
         //remove this if you want to see log later after trouble-maker runs.
 
         try {
+            //The coroutine 'z' troubleMaker() can't be fired as expected, because there's in
+            //the coroutine 'y' which breaks whole coroutineScope{}.
+
             troubleMaker()
         } catch (e: Exception) {
             log("Trouble caused by: $e")
@@ -304,7 +307,7 @@ fun structuredConcurrency() = runBlocking {
 private suspend fun troubleMaker() = coroutineScope {
     val y = async {
         try {
-            delay(5000) // Something goes run between doOne and doTwo.
+            delay(5000) // Something goes run during running of doOne and doTwo.
             val y = 1 / 0
             log("I got: $y")
         } finally {
@@ -347,7 +350,7 @@ fun dispatchers() = runBlocking {
         //The Dispatchers.Unconfined coroutine dispatcher starts coroutine in the caller thread,
         //but only until the first suspension point. After suspension it resumes in the thread
         //that is fully determined by the suspending function that was invoked.
-        //Unconfined dispatcher is appropriate when coroutine does not consume CPU time nor updates
+        //Unconfined dispatcher ipatientWaitUntilCancelHeavyJobs appropriate when coroutine does not consume CPU time nor updates
         //any shared data (like UI) that is confined to a specific thread.
 
         log("Unconfined")
