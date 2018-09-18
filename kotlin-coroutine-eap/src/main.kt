@@ -1,3 +1,4 @@
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -41,6 +42,11 @@ fun main(args: Array<String>) {
 
     //longTimeChildWouldBeStopped()
     //parentalResponsibility()
+
+//    exceptionAutomatically()
+//    exceptionExposed()
+//    exceptionHandler()
+    structuredConcurrencyWithExceptionHandler()
 
     /**
      * Advance topic of coroutine, normally we don't use in app development.
@@ -180,7 +186,8 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
                 }
             } finally {
                 log("I am killed.")
-                withContext(NonCancellable) {//Keep the following long-term codes to be proceed.
+                withContext(NonCancellable) {
+                    //Keep the following long-term codes to be proceed.
                     //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
                     delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long,however,it was killed previously.
                     log("final receiving...$itor")
@@ -444,4 +451,175 @@ fun advanceTopicThreadLocal() = runBlocking {
     }
     job.join()
     log("Post-main, thread local value: '${threadLocal.get()}'")
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#exception-propagation
+fun exceptionAutomatically() = runBlocking {
+    //The receiver-like coroutine: launch or actor can consume exception internal automatically.
+
+    val request = GlobalScope.launch {
+        delay(5000)
+        val y = 1 / 0
+        log("result: $y")
+    }
+    log("Sent request")
+    request.join()//Waiting for the result.
+    log("Done")//See this, the program will be processed here.
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#exception-propagation
+fun exceptionExposed() = runBlocking {
+    //The sender-like coroutine: async or produce exposes exception to the coroutine's caller.
+
+    val request = GlobalScope.async {
+        delay(5000)
+        val y = 1 / 0
+        y
+    }
+    log("Sent request")
+
+    try {
+        awaitAll(request)
+        log("result: ${request.await()}")//See this, the program won't be processed here.
+    } catch (e: Exception) {
+        log("Something is wrong caused by: $e")//See this, the program will be processed here.
+    }
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#coroutineexceptionhandler
+fun exceptionHandler() = runBlocking {
+    //Exception handler, to customize exception catching.
+    //The handler works only for exceptionAutomatically not exceptionExposed.
+
+    val handler = CoroutineExceptionHandler { _, e ->
+        log("Something is wrong caused by: $e")//See this, the program will be processed here.
+    }
+
+    val request1 = GlobalScope.launch(handler) {
+        delay(5000)
+        val y = 1 / 0
+        log("result: $y")
+    }
+    log("Sent request1")
+    request1.join()//Waiting for the result.
+    log("Done~1")//See this, the program will be processed here.
+
+    val request2 = GlobalScope.async(handler) {
+        delay(5000)
+        val y = 1 / 0
+        y
+    }
+    log("Sent request2")
+
+    log("result: ${request2.await()}")//The program won't be processed here.
+    log("Done~2")//See this, the program won't be processed here.
+}
+
+//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#cancellation-and-exceptions
+fun structuredConcurrencyWithExceptionHandler() = runBlocking {
+    //Different from structuredConcurrency(), here an exception-handler is used.
+    //GlobalScope.launch is used to be parent of to troubleMakerHelper() which sends
+    //some errors.
+
+    //This also a reason why, in these examples, CoroutineExceptionHandler is always installed to a
+    //coroutine that is created in GlobalScope. It does not make sense to install an exception
+    //handler to a coroutine that is launched in the scope of the main runBlocking,
+    //since the main coroutine is going to be always cancelled when its child completes with
+    //exception despite the installed handler.
+
+    //For non-GlobalScope coroutines: Child killed, parent killed, parent of parent killed, siblings killed.
+    //The exception will be exposed from internal to outside scopes to handle.
+    //When same level coroutine has try-catch on an exception, the catch must cancel other coroutines in the same level.
+    //See: troubleMakerHelper2()
+
+    val handler = CoroutineExceptionHandler { _, e ->
+        log("Something is wrong caused by: $e")//See this, the program will be processed here.
+    }
+
+    //With GlobalScope, exception will be handled.
+    GlobalScope.launch(handler) {
+        troubleMakerHelper1()
+    }.join()
+    log("End~1")
+
+    //If a coroutine encounters exception other than CancellationException,
+    //it cancels its parent with that exception.
+    //This behaviour cannot be overridden and is used to provide stable coroutines
+    //hierarchies for structured concurrency which do not depend on CoroutineExceptionHandler implementation.
+
+    //The original exception is handled by the parent when all its children terminate.
+    try {
+        troubleMakerHelper1()
+    } catch (e: Exception) {
+        log("I can save troubleMakerHelper1 caused by $e")
+    }
+
+    //This variant handles exception internally.
+    troubleMakerHelper2()
+
+    log("End~2")
+}
+
+private suspend fun troubleMakerHelper1() = coroutineScope {
+    val z = async {
+        var z = 0
+        try {
+            delay(51000)  //The 'y' makes error, which cancels parent, and all children will be also canceled.
+            log("troubleMakerHelper 1 done ")
+        } finally {
+            withContext(NonCancellable) {
+                z = doOne() + doTwo()
+                log("one + two = $z") //Show, 'z' is a child, it is canceled.
+            }
+        }
+        z
+    }
+
+    val y = async {
+        try {
+            delay(1000) // Something goes run during running of 'z'.
+            val y = 1 / 0
+            log("I got: $y")
+        } finally {
+            log("Something wrong with the expression: 1/0")
+        }
+    }
+    //Expose exception, it breaks all,
+    //cancel siblings, parent, bubble exception to parent.
+    awaitAll(z, y)
+}
+
+private suspend fun troubleMakerHelper2() = coroutineScope {
+    val z = async {
+        var z = 0
+        try {
+            delay(51000)  //The 'y' makes error, which cancels parent, and all children will be also canceled.
+            log("troubleMakerHelper 2 done ")
+        } finally {
+            withContext(NonCancellable) {
+                z = doOne() + doTwo()
+                log("one + two = $z") //Show, 'z' is a child, it is canceled.
+            }
+        }
+        z
+    }
+
+    val y = async {
+        try {
+            delay(1000) // Something goes run during running of 'z'.
+            val y = 1 / 0
+            log("I got: $y")
+        } finally {
+            log("Something wrong with the expression: 1/0")
+        }
+    }
+
+    //Handle exception here, but coroutines will be canceled.
+    //'z' is canceled manually, 'y' is automatically.
+    try {
+        awaitAll(z, y)
+    } catch (e: Exception) {
+        log("Handle exception internally, caused by $e")
+        z.cancel()
+    }
 }
