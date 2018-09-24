@@ -25,14 +25,14 @@ fun runChannel() = runBlocking {
             channel.send(it)
         }
     }
-    (0..100).forEach {_ ->
+    (0..100).forEach { _ ->
         print("${channel.receive()} ") //Receive can block(suspend).
     }
     println("\nend")
 }
 
 // https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#closing-and-iteration-over-channels
-fun runAndCloseChannel() = runBlocking{
+fun runAndCloseChannel() = runBlocking {
     val channel = Channel<Int>()
     launch {
         (0..100).forEach { it ->
@@ -43,7 +43,7 @@ fun runAndCloseChannel() = runBlocking{
         //If the close() is not called, you will never see "end", the "for" waits end-token forever.
     }
 
-    for( rec in channel){
+    for (rec in channel) {
         print("$rec ") //Receive can block(suspend).
     }
     println("\nend")
@@ -52,7 +52,8 @@ fun runAndCloseChannel() = runBlocking{
 // https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#building-channel-producers
 fun dataProducer1() = runBlocking {
     val producer = createData()
-    producer.consumeEach {//consumeEach can block(suspend).
+    producer.consumeEach {
+        //consumeEach can block(suspend).
         print("$it ")
     }
     println("\nend")
@@ -63,7 +64,8 @@ fun dataProducer2() = runBlocking {
     val producer = provideData()
 
     launch {
-        producer.consumeEach {//consumeEach can block(suspend).
+        producer.consumeEach {
+            //consumeEach can block(suspend).
             print("$it ")
         }
         println("\nend")
