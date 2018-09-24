@@ -99,7 +99,7 @@ private suspend fun provideData() = currentScope {
 fun pipeline() = runBlocking {
     launch {
         val ds = dataSource()
-        val result = map(ds)
+        val result = mapSquare(ds)
         for (res in result) { //Block(suspend)
             if (res > 500)
                 break
@@ -118,7 +118,7 @@ fun pipeline() = runBlocking {
     println("Output:")
 }
 
-private fun CoroutineScope.map(ds: ReceiveChannel<Long>) = this.produce<Long> {
+private fun CoroutineScope.mapSquare(ds: ReceiveChannel<Long>) = this.produce<Long> {
     for (d in ds) {
         send(d * d)
     }
