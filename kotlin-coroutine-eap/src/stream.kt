@@ -1,5 +1,8 @@
+
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.currentScope
@@ -11,9 +14,11 @@ fun main(args: Array<String>) {
     //runChannel()
     //runAndCloseChannel()
 
-    dataProducer1()
-    print("\n---2nd way---\n")
-    dataProducer2()
+//    dataProducer1()
+//    print("\n---2nd way---\n")
+//    dataProducer2()
+
+    pipeline()
 }
 
 // https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#channel-basics
@@ -87,5 +92,41 @@ private suspend fun provideData() = currentScope {
             delay(100)
             channel.send(it)
         }
+    }
+}
+
+// https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#pipelines
+fun pipeline() = runBlocking {
+    launch {
+        val ds = dataSource()
+        val result = map(ds)
+        for (res in result) { //Block(suspend)
+            if (res > 500)
+                break
+            else
+                print("$res ")
+        }
+
+        //Stop channels:
+//        ds.cancel()
+//        result.cancel()
+        //Reduce to this line
+        this.coroutineContext.cancelChildren()
+        println("\nend")
+    }
+
+    println("Output:")
+}
+
+private fun CoroutineScope.map(ds: ReceiveChannel<Long>) = this.produce<Long> {
+    for (d in ds) {
+        send(d * d)
+    }
+}
+
+private fun CoroutineScope.dataSource() = this.produce<Long> {
+    (0..99999999999999999).forEach { it ->
+        delay(100)
+        channel.send(it)
     }
 }
