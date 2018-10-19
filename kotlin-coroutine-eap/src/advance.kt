@@ -5,7 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.currentScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -86,7 +86,7 @@ private fun CoroutineScope.createData() = this.produce<Int> {
     }
 }
 
-private suspend fun provideData() = currentScope {
+private suspend fun provideData() = coroutineScope {
     this.produce<Int> {
         (0..100).forEach { it ->
             delay(100)
