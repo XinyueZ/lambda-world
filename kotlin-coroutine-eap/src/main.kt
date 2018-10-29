@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -18,7 +19,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#debugging-coroutines-and-threads
 // Run without -Dkotlinx.coroutines.debug
 //fun log(msg: String) = Thread.currentThread().run { println("[$name @coroutine#$id] $msg") }
 // Run with -Dkotlinx.coroutines.debug
@@ -54,7 +54,6 @@ fun main(args: Array<String>) {
     //advanceTopicThreadLocal()
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
 fun impatientWait() = runBlocking {
     val bkTaskDuration = 5000L
     val impatientWait = 1000L
@@ -66,7 +65,6 @@ fun impatientWait() = runBlocking {
     delay(impatientWait)
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#bridging-blocking-and-non-blocking-worlds
 fun patientWait() = runBlocking {
     val bkTaskDuration = 5000L
     val patientWait = 5000L * 5
@@ -78,7 +76,6 @@ fun patientWait() = runBlocking {
     delay(patientWait)
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#waiting-for-a-job
 fun patientWaitUntilOtherFinish() = runBlocking {
     val bkTaskDuration = 5000L
     val other = GlobalScope.launch {
@@ -90,7 +87,6 @@ fun patientWaitUntilOtherFinish() = runBlocking {
     other.join()
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@d1be1c9d970e29fcc177bb3767087af48935d400/-/blob/coroutines-guide.md#structured-concurrency
 fun patientWaitUntilChildFinish() = runBlocking {
     val bkTaskDuration = 5000L
     this.launch {
@@ -102,7 +98,6 @@ fun patientWaitUntilChildFinish() = runBlocking {
     //An outer coroutine (runBlocking in our example) does not complete until all the coroutines launched in its scope complete.
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#scope-builder
 fun patientWaitUntilChildInOtherScopeFinish() = runBlocking {
     val bkTaskDuration = 5000L
     val newScopeBkTaskDuration = 20000L
@@ -128,7 +123,6 @@ fun patientWaitUntilChildInOtherScopeFinish() = runBlocking {
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#cancelling-coroutine-execution
 fun patientWaitUntilChildInOtherScopeCancelled() = runBlocking {
     val bkTaskDuration = 1000L
     val newScopeBkTaskDuration = 20000L
@@ -160,7 +154,6 @@ fun patientWaitUntilChildInOtherScopeCancelled() = runBlocking {
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#making-computation-code-cancellable
 fun patientWaitUntilCancelHeavyJob() = runBlocking {
     val bkTaskDuration = 1000L
     val cancelDuration = 1300L
@@ -207,7 +200,6 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
     //The main difference between runBlocking and coroutineScope is that the latter does not block the current thread while waiting for all children to complete.
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#timeout
 fun patientWaitUntilTimeout() = runBlocking {
     val bkTaskDuration = 20 * 1000L
     val timeout = 5000L
@@ -240,7 +232,6 @@ fun patientWaitUntilTimeout() = runBlocking {
     log("I am first, I want to wait until my child being finishing.")
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#sequential-by-default
 fun sequential() = runBlocking {
     //The sequential is default in coroutine.
     //For concurrent try to use async{} explicitly, see example below: concurrent
@@ -254,7 +245,6 @@ fun sequential() = runBlocking {
     log("result: ${one + two}")
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#concurrent-using-async
 /**
  * [lazy] is true, then starting each job explicitly.
  */
@@ -293,7 +283,6 @@ fun concurrent(lazy: Boolean = false) = runBlocking {
     }
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#structured-concurrency-with-async
 fun structuredConcurrency() = runBlocking {
     launch(Dispatchers.IO) {
         //Don't want to block log below with launch{},
@@ -345,7 +334,7 @@ private suspend fun doTwo(): Int {
     return 2
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#dispatchers-and-threads
+@ObsoleteCoroutinesApi //for newSingleThreadContext
 fun dispatchers() = runBlocking {
     launch {
         //Inherits the context (and thus dispatcher) from the CoroutineScope that it is being launched from.
@@ -385,7 +374,6 @@ fun dispatchers() = runBlocking {
     }
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#children-of-a-coroutine
 fun longTimeChildWouldBeStopped() = runBlocking {
     val runner = launch {
         //Inherits the context (and thus dispatcher) from the CoroutineScope that it is being launched from.
@@ -419,7 +407,6 @@ fun longTimeChildWouldBeStopped() = runBlocking {
     println("Wait some minutes to see what GlobalScope.launch is still doing.")
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#parental-responsibilities
 fun parentalResponsibility() = runBlocking {
     val runner = launch {
         launch(Dispatchers.IO) {
@@ -437,7 +424,6 @@ fun parentalResponsibility() = runBlocking {
 }
 
 val threadLocal = ThreadLocal<String?>()
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#thread-local-data
 fun advanceTopicThreadLocal() = runBlocking {
     //This sample explains how a coroutine runs based on different threads or thread from a thread-pool.
     //There's a shared value which can be accessed between threads.
@@ -453,7 +439,6 @@ fun advanceTopicThreadLocal() = runBlocking {
     log("Post-main, thread local value: '${threadLocal.get()}'")
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#exception-propagation
 fun exceptionAutomatically() = runBlocking {
     //The receiver-like coroutine: launch or actor can consume exception internal automatically.
 
@@ -467,7 +452,6 @@ fun exceptionAutomatically() = runBlocking {
     log("Done")//See this, the program will be processed here.
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#exception-propagation
 fun exceptionExposed() = runBlocking {
     //The sender-like coroutine: async or produce exposes exception to the coroutine's caller.
 
@@ -486,7 +470,6 @@ fun exceptionExposed() = runBlocking {
     }
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#coroutineexceptionhandler
 fun exceptionHandler() = runBlocking {
     //Exception handler, to customize exception catching.
     //The handler works only for exceptionAutomatically not exceptionExposed.
@@ -515,7 +498,6 @@ fun exceptionHandler() = runBlocking {
     log("Done~2")//See this, the program won't be processed here.
 }
 
-//https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.0-eap13/-/blob/coroutines-guide.md#cancellation-and-exceptions
 fun structuredConcurrencyWithExceptionHandler() = runBlocking {
     //Different from structuredConcurrency(), here an exception-handler is used.
     //GlobalScope.launch is used to be parent of to troubleMakerHelper() which sends

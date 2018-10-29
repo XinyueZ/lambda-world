@@ -1,5 +1,6 @@
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -21,7 +22,6 @@ fun main(args: Array<String>) {
     pipeline()
 }
 
-// https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#channel-basics
 fun runChannel() = runBlocking {
     val channel = Channel<Int>()
     launch {
@@ -36,7 +36,6 @@ fun runChannel() = runBlocking {
     println("\nend")
 }
 
-// https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#closing-and-iteration-over-channels
 fun runAndCloseChannel() = runBlocking {
     val channel = Channel<Int>()
     launch {
@@ -54,7 +53,6 @@ fun runAndCloseChannel() = runBlocking {
     println("\nend")
 }
 
-// https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#building-channel-producers
 fun dataProducer1() = runBlocking {
     val producer = createData()
     producer.consumeEach {
@@ -64,7 +62,6 @@ fun dataProducer1() = runBlocking {
     println("\nend")
 }
 
-// https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#building-channel-producers
 fun dataProducer2() = runBlocking {
     val producer = provideData()
 
@@ -95,7 +92,6 @@ private suspend fun provideData() = coroutineScope {
     }
 }
 
-// https://sourcegraph.com/github.com/Kotlin/kotlinx.coroutines@0.26.1/-/blob/coroutines-guide.md#pipelines
 fun pipeline() = runBlocking {
     launch {
         val ds = dataSource()
@@ -124,6 +120,7 @@ private fun CoroutineScope.mapSquare(ds: ReceiveChannel<Long>) = this.produce<Lo
     }
 }
 
+@ExperimentalCoroutinesApi //for channel
 private fun CoroutineScope.dataSource() = this.produce<Long> {
     (0..99999999999999999).forEach { it ->
         delay(100)
