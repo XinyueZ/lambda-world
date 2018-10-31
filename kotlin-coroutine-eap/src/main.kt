@@ -174,16 +174,18 @@ fun patientWaitUntilCancelHeavyJob() = runBlocking {
 
             try {
                 while (itor >= 0 && isActive) { //Remove isActive, the job is so heavy and cannot be cancelled.
-                    log("receiving...$itor")
+                    val factor = itor * 0.1
+                    log("receiving...$factor")
                     itor--
                 }
             } finally {
                 log("I am killed.")
                 withContext(NonCancellable) {
-                    //Keep the following long-term codes to be proceed.
-                    //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
-                    delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long,however,it was killed previously.
-                    log("final receiving...$itor")
+                    //Attempt the following long-term codes to be proceed.
+                    //Without this, the delay(5000) will throw a CancellationException,
+                    //but the no problem, because the parent job has been canceled
+                    delay(longJobDuration)
+                    log("final receiving...${itor * 0.1}")
                 }
             }
         }
