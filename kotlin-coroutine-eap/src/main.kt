@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 
 // Run without -Dkotlinx.coroutines.debug
@@ -213,22 +214,27 @@ fun patientWaitUntilTimeout() = runBlocking {
         log("messaging...")
     }
 
-    withTimeoutOrNull(timeout) {
-        //A child of the new scope
-        var itor = 100000000000000
+    try {
+        //withTimeoutOrNull(timeout) {
+        withTimeout(timeout) {
+            //A child of the new scope
+            var itor = 100000000000000
 
-        try {
-            while (itor >= 0 && isActive) { //Remove isActive, the job is so heavy and cannot be cancelled.
-                log("receiving...$itor")
-                itor--
-            }
-        } finally {
-            withContext(NonCancellable) {
-                //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
-                delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long.
-                log("final receiving...$itor")
+            try {
+                while (itor >= 0 && isActive) { //Remove isActive, the job is so heavy and cannot be cancelled.
+                    log("receiving...$itor")
+                    itor--
+                }
+            } finally {
+                withContext(NonCancellable) {
+                    //Without this, the delay(5000)will block finally{}, and no log(), however, the finally will be cancelled.
+                    delay(longJobDuration) //This is a suspend functions(blocking) which can do a bit long.
+                    log("final receiving...$itor")
+                }
             }
         }
+    } catch (e: TimeoutCancellationException) {
+        log("Time is up due to withTimeout(), not with withTimeoutOrNull().")
     }
 
     log("I am first, I want to wait until my child being finishing.")
